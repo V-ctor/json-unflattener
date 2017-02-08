@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 
-public enum ParserState {
+public enum ParserStates {
     InObject {
         @Override void open(JsonGenerator generator, String objectName) throws IOException {
             generator.writeObjectFieldStart(objectName);

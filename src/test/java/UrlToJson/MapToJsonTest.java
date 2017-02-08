@@ -223,7 +223,8 @@ public class MapToJsonTest {
         final MapToJson mapToJson = new MapToJson(data);
         final OutputStream outputStream = mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
-            "{\"a\":[{\"c\":\"value1\"}],\"d\":[{\"c\":\"value2\"}]}");
+            "{\"a\":[{\"b\":{\"c\":\"value1\"}}],\"d\":[{\"e\":[{\"ee\":[{\"c\":\"value2\"}]}]}],\"f\":[{\"g\":{\"c\":\"value1\"}}]," +
+                "\"g\":{\"c\":\"value2\"},\"h\":[{\"i\":[{\"c\":\"value2\"}]}],\"k\":{\"l\":\"value2\"},\"m\":\"value2\"}");
     }
 
     @Test(dependsOnMethods = "MapToJsonTestTwoArrays")
