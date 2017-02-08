@@ -18,9 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MapToJson {
-    private final ArrayList<Map.Entry<String, Integer>> stack = new ArrayList();
-    private final Deque<ParserState> parserStateDeque = new ArrayDeque();
-    //    private final Map<String, String> data = new HashMap();
+    private final ArrayList<Map.Entry<String, Integer>> jsonElementStack = new ArrayList();
+    private final Deque<Map.Entry<Integer, ParserState>> parserStateDeque = new ArrayDeque();
     private final Map<String, String> data;
     private final JsonFactory factory = new JsonFactory();
     private final OutputStream out = new ByteArrayOutputStream();
@@ -35,11 +34,11 @@ public class MapToJson {
     public OutputStream parseToJson() throws IOException {
         generator.writeStartObject();
         for (String key : new TreeSet<String>(data.keySet())) {
-//                            level = 0;
+            level = 0;
             parseKey(key, key);
         }
         while (parserStateDeque.size() > 0) {
-            ParserState last = parserStateDeque.getLast();
+            ParserState last = parserStateDeque.getLast().getValue();
             last.close(generator);
             parserStateDeque.removeLast();
         }
@@ -63,21 +62,28 @@ public class MapToJson {
             if (index != null) {
                 final String fieldName = getFieldNameFromKey(keyLeft);
 
-                if (level > parserStateDeque.size()) {
-                    stack.add(new AbstractMap.SimpleEntry(fieldName, index));
+                if (level > jsonElementStack.size()) {
+                    jsonElementStack.add(new AbstractMap.SimpleEntry(fieldName, index));
                     openArrayEntity(fieldName);
 
                     openArrayElementEntity();
-                    level++;
 
-                } else /*if (level == parserStateDeque.size()) */{
-                    if (stack.get(stack.size() - 1).getKey().equals(fieldName)) {
-                        if (!stack.get(stack.size() - 1).getValue().equals(index)) {
-                            stack.remove(stack.size() - 1);
+                } else {
+                    if (jsonElementStack.get(level - 1).getKey().equals(fieldName)) {  //same array
+                        if (!jsonElementStack.get(level - 1).getValue().equals(index)) { // but new array element
+
+                            while (jsonElementStack.size() > (level - 1)) {
+                                jsonElementStack.remove(jsonElementStack.size() - 1);
+
+                            }
+                            jsonElementStack.add(new AbstractMap.SimpleEntry(fieldName, index));
+
+                            while (parserStateDeque.getLast().getKey() > (level)) {
+                                closeEntity();
+                            }
                             closeEntity();
 
                             openArrayElementEntity();
-                            stack.add(new AbstractMap.SimpleEntry(fieldName, index));
                         }
                     }
                 }
@@ -85,21 +91,17 @@ public class MapToJson {
                 parseKey(keyRight, fullKey);
 
             } else {
-                if (level > stack.size() || !stack.get(level - 1).getKey().equals(keyLeft)) {
-                    stack.add(new AbstractMap.SimpleEntry(keyLeft, null));
+                if (level > jsonElementStack.size() || !jsonElementStack.get(level - 1).getKey().equals(keyLeft)) {
+                    jsonElementStack.add(new AbstractMap.SimpleEntry(keyLeft, null));
                     openObjectEntity(keyLeft);
                 }
                 parseKey(keyRight, fullKey);
             }
 
-            //            generator.writeObjectFieldStart(keyLeft);
-            //            generator.writeEndObject();
         } else {
-            //            closeArrayIfItsNecessary();
-            while (parserStateDeque.size() > (level - 1)) {
-//                closeEntity();
+            while (jsonElementStack.size() > (level - 1)) {
                 closeEntityCompletely();
-                stack.remove(stack.size() - 1);
+                jsonElementStack.remove(jsonElementStack.size() - 1);
             }
             generator.writeStringField(key, data.get(fullKey));
         }
@@ -107,14 +109,14 @@ public class MapToJson {
     }
 
     private ParserState closeEntity() throws IOException {
-        ParserState parserState = parserStateDeque.pollLast();
+        ParserState parserState = parserStateDeque.pollLast().getValue();
         parserState.close(generator);
         return parserState;
     }
 
     private void closeEntityCompletely() throws IOException {
-        if (closeEntity().equals(ParserState.InArrayElement)){
-            ParserState parserState = parserStateDeque.pollLast();
+        if (closeEntity().equals(ParserState.InArrayElement)) {
+            ParserState parserState = parserStateDeque.pollLast().getValue();
             assert parserState.equals(ParserState.InArray);
             parserState.close(generator);
         }
@@ -123,19 +125,19 @@ public class MapToJson {
     private void openArrayEntity(String keyLeft) throws IOException {
         ParserState parserState = ParserState.InArray;
         parserState.open(generator, keyLeft);
-        parserStateDeque.addLast(parserState);
+        parserStateDeque.addLast(new AbstractMap.SimpleEntry(level, parserState));
     }
 
     private void openObjectEntity(String keyLeft) throws IOException {
         ParserState parserState = ParserState.InObject;
         parserState.open(generator, keyLeft);
-        parserStateDeque.addLast(parserState);
+        parserStateDeque.addLast(new AbstractMap.SimpleEntry(level, parserState));
     }
 
     private void openArrayElementEntity() throws IOException {
         ParserState parserState = ParserState.InArrayElement;
         parserState.open(generator, null);
-        parserStateDeque.addLast(parserState);
+        parserStateDeque.addLast(new AbstractMap.SimpleEntry(level, parserState));
     }
 
     private String getSecondPartOfKey(String key, String subKey) {
