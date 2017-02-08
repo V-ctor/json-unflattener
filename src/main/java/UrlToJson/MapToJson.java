@@ -57,47 +57,85 @@ public class MapToJson {
             final String keyLeft = getKeyLeft(key);
             final String keyRight = getKeyRight(key);
 
-            final Integer index = getIndexFromKey(keyLeft);
-            if (index != null) {
-                final String fieldName = getFieldNameFromKey(keyLeft);
+            if (isKeyElementOfArray(keyLeft)) {
+                final String arrayName = getFieldNameFromKey(keyLeft);
+                final Integer arrayIndex = getIndexFromKey(keyLeft);
 
-                if (level > jsonElementStack.size()) {
-                    jsonElementStack.add(new AbstractMap.SimpleEntry(fieldName, index));
-                    openArrayEntity(fieldName);
+                if (level > jsonElementStack.size()) { //is it new array?
+                    jsonElementStack.add(new AbstractMap.SimpleEntry(arrayName, arrayIndex));
+                    openArrayEntity(arrayName);
 
                     openArrayElementEntity();
 
-                } else {
-                    if (jsonElementStack.get(level - 1).getKey().equals(fieldName)) {  //same array
-                        if (!jsonElementStack.get(level - 1).getValue().equals(index)) { // but new array element
+                } else {//or just new array element?
+                    if (jsonElementStack.size() > 0 && jsonElementStack.get(level - 1).getKey().equals(arrayName)) {  //same array
+                        if (jsonElementStack.size() > 0 &&
+                            !jsonElementStack.get(level - 1).getValue().equals(arrayIndex)) { // but new array element
 
                             while (jsonElementStack.size() > (level - 1)) {
                                 jsonElementStack.remove(jsonElementStack.size() - 1);
 
                             }
-                            jsonElementStack.add(new AbstractMap.SimpleEntry(fieldName, index));
+                            jsonElementStack.add(new AbstractMap.SimpleEntry(arrayName, arrayIndex));
 
-                            while (parserStateDeque.getLast().getKey() > (level)) {
+                            while (parserStateDeque.size() > 0 && parserStateDeque.getLast().getKey() > (level)) {
                                 closeEntity();
                             }
                             closeEntity();
 
                             openArrayElementEntity();
                         }
+                    } else { //new array
+                        while (jsonElementStack.size() > (level - 1)) {
+                            jsonElementStack.remove(jsonElementStack.size() - 1);
+
+                        }
+                        jsonElementStack.add(new AbstractMap.SimpleEntry(arrayName, arrayIndex));
+                        while (parserStateDeque.size() > 0 && parserStateDeque.getLast().getKey() > (level - 1)) {
+                            closeEntity();
+                        }
+
+                        openArrayEntity(arrayName);
+
+                        openArrayElementEntity();
                     }
                 }
 
                 parseKey(keyRight, fullKey);
 
-            } else {
-                if (level > jsonElementStack.size() || !jsonElementStack.get(level - 1).getKey().equals(keyLeft)) {
+            } else {//key is object
+                if (level > jsonElementStack.size()) {
+
                     jsonElementStack.add(new AbstractMap.SimpleEntry(keyLeft, null));
                     openObjectEntity(keyLeft);
+                } else {
+                    if (!jsonElementStack.get(level - 1).getKey().equals(keyLeft)) {
+
+                        while (jsonElementStack.size() > (level - 1)) {
+                            jsonElementStack.remove(jsonElementStack.size() - 1);
+
+                        }
+                        jsonElementStack.add(new AbstractMap.SimpleEntry(keyLeft, null));
+
+                        while (parserStateDeque.size() > 0 && parserStateDeque.getLast().getKey() >= (level)) {
+                            //                            closeEntityCompletely();
+                            /*ParserState parserState =*/
+                            closeEntity();
+                        }
+                        if (parserStateDeque.size() > 0 && parserStateDeque.getLast().getValue().equals(ParserState.InArrayElement)) {
+                            closeEntity();
+                            openArrayElementEntity();
+                        }
+
+                        openObjectEntity(keyLeft);
+                    }
+
                 }
+
                 parseKey(keyRight, fullKey);
             }
 
-        } else {
+        } else {//simple field
             while (jsonElementStack.size() > (level - 1)) {
                 closeEntityCompletely();
                 jsonElementStack.remove(jsonElementStack.size() - 1);
@@ -126,6 +164,10 @@ public class MapToJson {
 
     private static String getFieldNameFromKey(String key) {
         return key.split("\\[")[0];
+    }
+
+    private static boolean isKeyElementOfArray(String key) {
+        return getIndexFromKey(key) != null;
     }
 
     private ParserState closeEntity() throws IOException {
