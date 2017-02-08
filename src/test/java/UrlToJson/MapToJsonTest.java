@@ -27,7 +27,7 @@ public class MapToJsonTest {
         assertEquals(outputStream.toString(), "{\"a\":\"" + TEST_VALUE_1 + "\"}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestOneVariable")
     public void MapToJsonTestTwoVariables() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a", TEST_VALUE_1);
@@ -38,7 +38,7 @@ public class MapToJsonTest {
         assertEquals(outputStream.toString(), "{\"a\":\"" + TEST_VALUE_1 + "\",\"b\":\"" + TEST_VALUE_2 + "\"}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestTwoVariables")
     public void MapToJsonTestOneSubVariable() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
@@ -49,7 +49,7 @@ public class MapToJsonTest {
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\"}}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestOneSubVariable")
     public void MapToJsonTestTwoSubVariables() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
@@ -61,7 +61,7 @@ public class MapToJsonTest {
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestTwoSubVariables")
     public void MapToJsonTestThreeSubVariables() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
@@ -74,7 +74,7 @@ public class MapToJsonTest {
             "\"},\"e\":\"1.3\"}}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestThreeSubVariables")
     public void MapToJsonTestThreeSubVariables2() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
@@ -87,7 +87,7 @@ public class MapToJsonTest {
             "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":{\"d\":{\"d\":{\"d\":{\"d\":\"" + TEST_VALUE_2 + "\"}}}},\"e\":\"1.3\"}}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
     public void MapToJsonTestArrayOneVariable() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);
@@ -97,7 +97,7 @@ public class MapToJsonTest {
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\"}]}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestArrayOneVariable")
     public void MapToJsonTestArrayTwoVariables() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);
@@ -108,7 +108,7 @@ public class MapToJsonTest {
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestArrayTwoVariables")
     public void MapToJsonTestArrayTwoElements() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);
@@ -119,7 +119,7 @@ public class MapToJsonTest {
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\"},{\"b\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestArrayTwoElements")
     public void MapToJsonTestArray() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b[0].c", TEST_VALUE_1);
@@ -131,7 +131,7 @@ public class MapToJsonTest {
             "{\"a\":[{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\"}],\"url\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestArray")
     public void MapToJsonTestTwoArrays() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b[0].c", TEST_VALUE_1);
@@ -144,7 +144,7 @@ public class MapToJsonTest {
             "{\"a\":[{\"b\":[{\"c\":\""+ TEST_VALUE_1 + "\"}]},{\"b\":[{\"c\":\"" + TEST_VALUE_2 + "\"}]}]}");
     }
 
-    @Test
+    @Test(dependsOnMethods = "MapToJsonTestTwoArrays")
     public void MapToJsonTestFull() throws IOException {
         final Map<String, String> data = new HashMap();
 

@@ -53,10 +53,9 @@ public class MapToJson {
 
     private void parseKey(String key, String fullKey) throws IOException {
         level++;
-        final String[] subKeys = key.split("\\.");
-        final String keyLeft = subKeys[0];
-        final String keyRight = getSecondPartOfKey(key, keyLeft);
-        if (subKeys.length > 1) {
+        if (isKeyComplex(key)) {
+            final String keyLeft = getKeyLeft(key);
+            final String keyRight = getKeyRight(key);
 
             final Integer index = getIndexFromKey(keyLeft);
             if (index != null) {
@@ -108,6 +107,27 @@ public class MapToJson {
         level--;
     }
 
+    private static boolean isKeyComplex(String key) {
+        return key.split("\\.").length > 1;
+    }
+
+    private static String getKeyLeft(String key) {
+        return key.split("\\.")[0];
+    }
+
+    private static String getKeyRight(String key) {
+        assert isKeyComplex(key);
+        return getSecondPartOfKey(key, getKeyLeft(key));
+    }
+
+    private static String getSecondPartOfKey(String key, String subKey) {
+        return key.length() > subKey.length() ? key.substring(subKey.length() + 1) : null;
+    }
+
+    private static String getFieldNameFromKey(String key) {
+        return key.split("\\[")[0];
+    }
+
     private ParserState closeEntity() throws IOException {
         ParserState parserState = parserStateDeque.pollLast().getValue();
         parserState.close(generator);
@@ -140,15 +160,6 @@ public class MapToJson {
         parserStateDeque.addLast(new AbstractMap.SimpleEntry(level, parserState));
     }
 
-    private String getSecondPartOfKey(String key, String subKey) {
-        return key.length() > subKey.length() ? key.substring(subKey.length() + 1) : null;
-    }
-
-
-    private String getFieldNameFromKey(String key) {
-        return key.split("\\[")[0];
-    }
-
     private void closeArrayIfItsNecessary() throws IOException {
 
         if (parserStateDeque.getLast().equals(ParserState.InArray)) {
@@ -157,7 +168,7 @@ public class MapToJson {
         }
     }
 
-    private Integer getIndexFromKey(String key) {
+    private static Integer getIndexFromKey(String key) {
         final Pattern p = Pattern.compile("(?<=\\[)\\d");
         final Matcher m = p.matcher(key);
         if (m.find()) {
@@ -166,11 +177,6 @@ public class MapToJson {
             return index;
         }
         return null;
-    }
-
-    private boolean isComplexKey(String key) {
-        final String[] subKeys = key.split("\\.");
-        return subKeys.length > 1;
     }
 
 }
