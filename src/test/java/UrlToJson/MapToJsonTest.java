@@ -3,6 +3,7 @@ package UrlToJson;
 
 import org.testng.annotations.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -22,8 +23,9 @@ public class MapToJsonTest {
         final Map<String, String> data = new HashMap();
         data.put("a", TEST_VALUE_1);
 
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":\"" + TEST_VALUE_1 + "\"}");
     }
 
@@ -32,9 +34,9 @@ public class MapToJsonTest {
         final Map<String, String> data = new HashMap();
         data.put("a", TEST_VALUE_1);
         data.put("b", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":\"" + TEST_VALUE_1 + "\",\"b\":\"" + TEST_VALUE_2 + "\"}");
     }
 
@@ -43,9 +45,9 @@ public class MapToJsonTest {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
         //        data.put("b", "search.domain");
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\"}}");
     }
 
@@ -55,9 +57,9 @@ public class MapToJsonTest {
         data.put("a.b", TEST_VALUE_1);
         data.put("a.c", TEST_VALUE_2);
         //        data.put("b", "search.domain");
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}}");
     }
 
@@ -66,22 +68,22 @@ public class MapToJsonTest {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_2);
         data.put("c.d", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":{\"b\":\"value2\"},\"c\":{\"d\":\"value2\"}}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestTwoSubVariables")
+    @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
     public void MapToJsonTestThreeSubVariables() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
         data.put("a.c.d", TEST_VALUE_2);
         data.put("a.e", "1.3");
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":{\"d\":\"" + TEST_VALUE_2 +
             "\"},\"e\":\"1.3\"}}");
     }
@@ -92,9 +94,9 @@ public class MapToJsonTest {
         data.put("a.b", TEST_VALUE_1);
         data.put("a.c.d.d.d.d", TEST_VALUE_2);
         data.put("a.e", "1.3");
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":{\"d\":{\"d\":{\"d\":{\"d\":\"" + TEST_VALUE_2 + "\"}}}},\"e\":\"1.3\"}}");
     }
@@ -103,9 +105,9 @@ public class MapToJsonTest {
     public void MapToJsonTestArrayOneVariable() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\"}]}");
     }
 
@@ -114,9 +116,9 @@ public class MapToJsonTest {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);
         data.put("a[0].c", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
@@ -125,9 +127,9 @@ public class MapToJsonTest {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);
         data.put("a[1].b", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\"},{\"b\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
@@ -136,9 +138,9 @@ public class MapToJsonTest {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[0].url", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\"}],\"url\":\"" + TEST_VALUE_2 + "\"}]}");
     }
@@ -149,9 +151,9 @@ public class MapToJsonTest {
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[0].d.e", TEST_VALUE_2);
         //        data.put("a[0].url", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"b\":[{\"c\":\"value1\"}]},{\"d\":{\"e\":\"value2\"}}]}");
     }
@@ -162,9 +164,9 @@ public class MapToJsonTest {
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[1].b[0].c", TEST_VALUE_2);
         //        data.put("a[0].url", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\"}]},{\"b\":[{\"c\":\"" + TEST_VALUE_2 + "\"}]}]}");
     }
@@ -175,9 +177,9 @@ public class MapToJsonTest {
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[1].b[1].c", TEST_VALUE_2);
         //        data.put("a[0].url", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"b\":[{\"c\":\"value1\"}]},{\"b\":[{\"c\":\"value2\"}]}]}");
     }
@@ -188,9 +190,9 @@ public class MapToJsonTest {
         data.put("a[0].c", TEST_VALUE_1);
         data.put("d[0].c", TEST_VALUE_2);
         //        data.put("a[0].url", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"c\":\"value1\"}],\"d\":[{\"c\":\"value2\"}]}");
     }
@@ -203,7 +205,7 @@ public class MapToJsonTest {
         data.put("g.c", TEST_VALUE_2);
 
         final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"c\":\"value1\"}],\"d\":[{\"c\":\"value2\"}]}");
     }*/
@@ -219,9 +221,9 @@ public class MapToJsonTest {
         data.put("k.l", TEST_VALUE_2);
         data.put("m", TEST_VALUE_2);
         //        data.put("a[0].url", TEST_VALUE_2);
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"b\":{\"c\":\"value1\"}}],\"d\":[{\"e\":[{\"ee\":[{\"c\":\"value2\"}]}]}],\"f\":[{\"g\":{\"c\":\"value1\"}}]," +
                 "\"g\":{\"c\":\"value2\"},\"h\":[{\"i\":[{\"c\":\"value2\"}]}],\"k\":{\"l\":\"value2\"},\"m\":\"value2\"}");
@@ -250,9 +252,9 @@ public class MapToJsonTest {
         data.put("a[1].b[0].c", TEST_VALUE_1);
         data.put("a[1].b[0].d", TEST_VALUE_3);
 
-
-        final MapToJson mapToJson = new MapToJson(data);
-        final OutputStream outputStream = mapToJson.parseToJson();
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final MapToJson mapToJson = new MapToJson(data, outputStream);
+        mapToJson.parseToJson();
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"b\":[{\"c\":\"value1\",\"d\":\"value3\",\"e\":\"value4\",\"f\":\"\"},{\"c\":\"value1\",\"e\":\"value4\",\"f\":\"\",\"g\":\"10\",\"h\":\"10000\"},{\"c\":\"value1\",\"e\":\"value4\",\"f\":\"\",\"g\":\"20\",\"h\":\"20000\"}],\"url\":\"value2\"},{\"b\":[{\"c\":\"value1\",\"d\":\"value3\"}],\"url\":\"value2\"}]}");
     }

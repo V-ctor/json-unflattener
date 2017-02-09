@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
@@ -16,14 +15,17 @@ import java.util.regex.Pattern;
 public class MapToJson {
     private final Map<String, String> data;
     private final JsonFactory factory = new JsonFactory();
-    private final OutputStream out = new ByteArrayOutputStream();
-    private final JsonGenerator generator = factory.createGenerator(out, JsonEncoding.UTF8);
-    private final ParserStateMachine parserStateMachine = new ParserStateMachine(generator);
+    private final OutputStream out ;
+    private final JsonGenerator generator ;
+    private final ParserStateMachine parserStateMachine ;
 
     private int level;
 
-    public MapToJson(Map<String, String> data) throws IOException {
+    public MapToJson(Map<String, String> data, OutputStream out) throws IOException {
         this.data = data;
+        this.out = out;
+        this.generator = factory.createGenerator(out, JsonEncoding.UTF8);
+        this.parserStateMachine = new ParserStateMachine(generator);
     }
 
     public OutputStream parseToJson() throws IOException {
@@ -37,7 +39,6 @@ public class MapToJson {
         generator.writeEndObject();
 
         generator.close();
-        System.out.println(out);
 
         return out;
     }
@@ -53,61 +54,34 @@ public class MapToJson {
                 final Integer arrayIndex = getIndexFromKey(keyLeft);
 
                 if (!parserStateMachine.isBranchDeeper(level)) { //is it new array?
-                    parserStateMachine.addEntity(arrayName, arrayIndex);
-                    parserStateMachine.openArrayEntity(level, arrayName);
-
-                    parserStateMachine.openArrayElementEntity(level);
-
+                    parserStateMachine.toArrayState(level, arrayName, arrayIndex);
                 } else {//or just new array element?
                     if (parserStateMachine.isItSameArray(level, arrayName)) {  //same array
                         if (parserStateMachine.isItSameArrayElement(level, arrayIndex)) { // but new array element
+                            parserStateMachine.fromAnywhereForArrayElement(level);
 
-                            parserStateMachine.downgradeToLevel(level);
-                            parserStateMachine.addEntity(arrayName, arrayIndex);
-
-                            parserStateMachine.closeAllToLevel(level);
-                            parserStateMachine.closeEntity();
-
-                            parserStateMachine.openArrayElementEntity(level);
+                            parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
                         }
                     } else { //new array
-                        parserStateMachine.downgradeToLevel(level);
-                        parserStateMachine.addEntity(arrayName, arrayIndex);
-                        parserStateMachine.closeAllToLevel(level - 1);
+                        parserStateMachine.fromAnywhereForArray(level);
 
-                        parserStateMachine.openArrayEntity(level, arrayName);
-
-                        parserStateMachine.openArrayElementEntity(level);
+                        parserStateMachine.toArrayState(level, arrayName, arrayIndex);
                     }
                 }
-
-                parseKey(keyRight, fullKey);
-
             } else {//key is object
                 if (!parserStateMachine.isBranchDeeper(level)) {
-
-                    parserStateMachine.addEntity(keyLeft,null);
-                    parserStateMachine.openObjectEntity(level, keyLeft);
+                    parserStateMachine.toObject(level, keyLeft);
                 } else {
                     if (!parserStateMachine.isItSameObject(level, keyLeft)) {
+                        parserStateMachine.fromAnywhereForObject(level);
 
-                        parserStateMachine.downgradeToLevel(level);
-                        parserStateMachine.addEntity(keyLeft,null);
-
-                        parserStateMachine.closeAllToLevel(level-1);
-
-                        parserStateMachine.closeAndOpenIfLastIsArrayElement(level);
-
-                        parserStateMachine.openObjectEntity(level, keyLeft);
+                        parserStateMachine.toObject(level, keyLeft);
                     }
-
                 }
-
-                parseKey(keyRight, fullKey);
             }
-
+            parseKey(keyRight, fullKey);
         } else {//simple field
-            parserStateMachine.closeForField(level);
+            parserStateMachine.fromAnywhereToField(level);
             generator.writeStringField(key, data.get(fullKey));
         }
         level--;

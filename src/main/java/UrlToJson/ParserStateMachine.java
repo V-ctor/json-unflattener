@@ -24,11 +24,39 @@ public class ParserStateMachine {
             last.close(generator);
             parserStateDeque.removeLast();
         }
-
     }
 
-    int getCurrentLevel() {
-        return jsonElementStack.size();
+    void toArrayState(int level, String arrayName, int arrayIndex) throws IOException {
+        addEntity(arrayName, arrayIndex);
+        openArrayEntity(level, arrayName);
+        openArrayElementEntity(level);
+    }
+
+    void fromAnywhereForArrayElement(int level) throws IOException {
+        downgradeToLevel(level);
+        closeAllToLevel(level);
+        closeEntity();
+    }
+
+    void toArrayElement(int level, String arrayName, int arrayIndex) throws IOException {
+        addEntity(arrayName, arrayIndex);
+        openArrayElementEntity(level);
+    }
+
+    void fromAnywhereForArray(int level) throws IOException {
+        downgradeToLevel(level);
+        closeAllToLevel(level - 1);
+    }
+
+    void fromAnywhereForObject(int level) throws IOException {
+        downgradeToLevel(level);
+        closeAllToLevel(level - 1);
+        closeAndOpenIfLastIsArrayElement(level);
+    }
+
+    void toObject(int level, String name) throws IOException {
+        addEntity(name, null);
+        openObjectEntity(level, name);
     }
 
     void addStateArray(int level, String fieldName, Integer index) throws IOException {
@@ -38,9 +66,9 @@ public class ParserStateMachine {
         openArrayElementEntity(level);
     }
 
-    void openArrayEntity(int level, String keyLeft) throws IOException {
+    void openArrayEntity(int level, String name) throws IOException {
         ParserStates parserState = ParserStates.InArray;
-        parserState.open(generator, keyLeft);
+        parserState.open(generator, name);
         parserStateDeque.addLast(new AbstractMap.SimpleEntry(level, parserState));
     }
 
@@ -56,24 +84,10 @@ public class ParserStateMachine {
         return parserState;
     }
 
-    void openObjectEntity(int level, String keyLeft) throws IOException {
+    void openObjectEntity(int level, String name) throws IOException {
         ParserStates parserState = ParserStates.InObject;
-        parserState.open(generator, keyLeft);
+        parserState.open(generator, name);
         parserStateDeque.addLast(new AbstractMap.SimpleEntry(level, parserState));
-    }
-
-    void closeAndOpenIfLastIsArrayElement(int level) throws IOException {
-        if (parserStateDeque.size() > 0 && parserStateDeque.getLast().getValue().equals(ParserStates.InArrayElement)) {
-            closeEntity();
-            openArrayElementEntity(level);
-        }
-    }
-
-    void closeForField(int level) throws IOException {
-        while (jsonElementStack.size() > (level - 1)) {
-            closeEntityCompletely();
-            jsonElementStack.remove(jsonElementStack.size() - 1);
-        }
     }
 
     private void closeEntityCompletely() throws IOException {
@@ -112,6 +126,25 @@ public class ParserStateMachine {
 
     void closeAllToLevel(int level) throws IOException {
         while (parserStateDeque.size() > 0 && parserStateDeque.getLast().getKey() > (level)) {
+            closeEntity();
+        }
+    }
+
+    private boolean isLastState(ParserStates parserState) {
+        return parserStateDeque.size() > 0 && parserStateDeque.getLast().getValue().equals(parserState);
+    }
+
+    void closeAndOpenIfLastIsArrayElement(int level) throws IOException {
+        if (isLastState(ParserStates.InArrayElement)) {
+            closeEntity();
+            openArrayElementEntity(level);
+        }
+    }
+
+    void fromAnywhereToField(int level) throws IOException {
+        downgradeToLevel(level);
+        closeAllToLevel(level - 1);
+        if (isLastState(ParserStates.InArray)) {
             closeEntity();
         }
     }
