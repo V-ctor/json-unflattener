@@ -12,25 +12,28 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("WeakerAccess")
 public class MapToJson {
     private final Map<String, String> data;
-    private final JsonFactory factory = new JsonFactory();
-    private final OutputStream out ;
-    private final JsonGenerator generator ;
-    private final ParserStateMachine parserStateMachine ;
+    private final OutputStream out;
+    private final JsonGenerator generator;
+    private final ParserStateMachine parserStateMachine;
 
     private int level;
 
+    @SuppressWarnings("WeakerAccess")
     public MapToJson(Map<String, String> data, OutputStream out) throws IOException {
         this.data = data;
         this.out = out;
+        JsonFactory factory = new JsonFactory();
         this.generator = factory.createGenerator(out, JsonEncoding.UTF8);
         this.parserStateMachine = new ParserStateMachine(generator);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public OutputStream parseToJson() throws IOException {
         generator.writeStartObject();
-        for (String key : new TreeSet<String>(data.keySet())) {
+        for (String key : new TreeSet<>(data.keySet())) {
             level = 0;
             parseKey(key, key);
         }
@@ -51,7 +54,7 @@ public class MapToJson {
 
             if (isKeyElementOfArray(keyLeft)) {
                 final String arrayName = getFieldNameFromKey(keyLeft);
-                final Integer arrayIndex = getIndexFromKey(keyLeft);
+                final int arrayIndex = getIndexFromKey(keyLeft);
 
                 if (!parserStateMachine.isBranchDeeper(level)) { //is it new array?
                     parserStateMachine.toArrayState(level, arrayName, arrayIndex);
@@ -108,18 +111,18 @@ public class MapToJson {
         return key.split("\\[")[0];
     }
 
-    private static boolean isKeyElementOfArray(String key) {
-        return getIndexFromKey(key) != null;
+    private static Matcher getKeyArrayIndexMatcher(String key) {
+        final Pattern p = Pattern.compile("(?<=\\[)\\d");
+        return p.matcher(key);
     }
 
-    private static Integer getIndexFromKey(String key) {
-        final Pattern p = Pattern.compile("(?<=\\[)\\d");
-        final Matcher m = p.matcher(key);
-        if (m.find()) {
-            String matchIndex = m.group();
-            int index = Integer.parseInt(matchIndex);
-            return index;
-        }
-        return null;
+    private static boolean isKeyElementOfArray(String key) {
+        return getKeyArrayIndexMatcher(key).find();
+    }
+
+    private static int getIndexFromKey(String key) {
+        final Matcher keyArrayIndexMatcher = getKeyArrayIndexMatcher(key);
+        assert keyArrayIndexMatcher.find();
+        return Integer.parseInt(keyArrayIndexMatcher.group());
     }
 }
