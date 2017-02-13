@@ -13,6 +13,7 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("WeakerAccess")
 public class JsonUnflattener {
@@ -44,14 +45,15 @@ public class JsonUnflattener {
 
     private Map<String, String> convertMultiValueMapToSingleValue(MapStringStringArrayRef data) {
         Map<String, String> jsonMap = new HashMap<>();
-        data.get().entrySet().forEach(
-            (obj) -> {
-                System.out.println(obj);
-                if (!(obj.getValue().length == 1))
-                    throw new IllegalArgumentException("More than one value for parameter");
-                jsonMap.put(obj.getKey(), obj.getValue()[0]);
-            }
-        );
+        jsonMap = data.get().entrySet().stream()
+            .filter(
+                obj -> {
+                    if (!(obj.getValue().length == 1))
+                        throw new IllegalArgumentException("Value array must have only one element");
+                    return true;
+                }
+            )
+            .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()[0]));
         return jsonMap;
     }
 
