@@ -1,4 +1,4 @@
-package UrlToJson;
+package com.github.v_ctor.json.unflattener;
 
 
 import com.fasterxml.jackson.core.JsonEncoding;
@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("WeakerAccess")
-public class MapToJson {
+public class JsonUnflattener {
     private  Map<String, String> data;
     private final OutputStream out;
     private final JsonGenerator generator;
@@ -24,20 +24,20 @@ public class MapToJson {
     private int level;
 
     @SuppressWarnings("WeakerAccess")
-    private MapToJson(OutputStream out) throws IOException {
+    private JsonUnflattener(OutputStream out) throws IOException {
         this.out = out;
         final JsonFactory factory = new JsonFactory();
         this.generator = factory.createGenerator(out, JsonEncoding.UTF8);
         this.parserStateMachine = new ParserStateMachine(generator);
     }
     public interface MapStringStringRef extends Supplier<Map<String, String>> {}
-    public MapToJson(MapStringStringRef data, OutputStream out) throws IOException {
+    public JsonUnflattener(MapStringStringRef data, OutputStream out) throws IOException {
         this(out);
         this.data = data.get();
     }
 
     public interface MapStringStringArrayRef extends Supplier<Map<String, String[]>> {}
-    public MapToJson(MapStringStringArrayRef data, OutputStream out) throws IOException {
+    public JsonUnflattener(MapStringStringArrayRef data, OutputStream out) throws IOException {
         this(out);
         this.data = convertMultiValueMapToSingleValue(data);
     }

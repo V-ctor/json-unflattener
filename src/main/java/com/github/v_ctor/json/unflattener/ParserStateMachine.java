@@ -1,4 +1,4 @@
-package UrlToJson;
+package com.github.v_ctor.json.unflattener;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
