@@ -7,14 +7,16 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("WeakerAccess")
 public class MapToJson {
-    private final Map<String, String> data;
+    private  Map<String, String> data;
     private final OutputStream out;
     private final JsonGenerator generator;
     private final ParserStateMachine parserStateMachine;
@@ -22,12 +24,35 @@ public class MapToJson {
     private int level;
 
     @SuppressWarnings("WeakerAccess")
-    public MapToJson(Map<String, String> data, OutputStream out) throws IOException {
-        this.data = data;
+    private MapToJson(OutputStream out) throws IOException {
         this.out = out;
-        JsonFactory factory = new JsonFactory();
+        final JsonFactory factory = new JsonFactory();
         this.generator = factory.createGenerator(out, JsonEncoding.UTF8);
         this.parserStateMachine = new ParserStateMachine(generator);
+    }
+    public interface MapStringStringRef extends Supplier<Map<String, String>> {}
+    public MapToJson(MapStringStringRef data, OutputStream out) throws IOException {
+        this(out);
+        this.data = data.get();
+    }
+
+    public interface MapStringStringArrayRef extends Supplier<Map<String, String[]>> {}
+    public MapToJson(MapStringStringArrayRef data, OutputStream out) throws IOException {
+        this(out);
+        this.data = convertMultiValueMapToSingleValue(data);
+    }
+
+    private Map<String, String> convertMultiValueMapToSingleValue(MapStringStringArrayRef data) {
+        Map<String, String> jsonMap = new HashMap<>();
+        data.get().entrySet().forEach(
+            (obj) -> {
+                System.out.println(obj);
+                if (!(obj.getValue().length == 1))
+                    throw new IllegalArgumentException("More than one value for parameter");
+                jsonMap.put(obj.getKey(), obj.getValue()[0]);
+            }
+        );
+        return jsonMap;
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -122,7 +147,8 @@ public class MapToJson {
 
     private static int getIndexFromKey(String key) {
         final Matcher keyArrayIndexMatcher = getKeyArrayIndexMatcher(key);
-        assert keyArrayIndexMatcher.find();
+        boolean result = keyArrayIndexMatcher.find();
+        assert result;
         return Integer.parseInt(keyArrayIndexMatcher.group());
     }
 }
