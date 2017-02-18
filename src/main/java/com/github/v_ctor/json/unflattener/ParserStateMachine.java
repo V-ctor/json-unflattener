@@ -38,12 +38,22 @@ class ParserStateMachine {
 //        closeEntity();
     }
 
+    void fromAnywhereForArrayObject(int level) throws IOException {
+        downgradeToLevel(level);
+        closeAllToLevel(level);
+        if (parserStateDeque.getLast().getValue().equals(ParserStates.InArrayElement))
+            closeEntity();
+    }
+
     void toArrayElement(int level, String arrayName, int arrayIndex) throws IOException {
         addEntity(arrayName, arrayIndex);
 //        openArrayElementEntity(level);
     }
 
-//    void
+    void toArrayObject(int level, String arrayName, int arrayIndex) throws IOException {
+        addEntity(arrayName, arrayIndex);
+        openArrayElementEntity(level);
+    }
 
     void fromAnywhereForArray(int level) throws IOException {
         downgradeToLevel(level);

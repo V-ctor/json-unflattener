@@ -169,7 +169,7 @@ public class JsonUnflattenerTest {
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArrayTwoVariables")
+    @Test//(dependsOnMethods = "MapToJsonTestArrayTwoVariables")
     public void MapToJsonTestArrayTwoElements() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);

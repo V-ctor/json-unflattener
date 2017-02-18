@@ -107,10 +107,10 @@ public class JsonUnflattener {
                             generator.writeString(data.get(fullKey));
                         }
                     } else { //new array element
-                        parserStateMachine.fromAnywhereForArrayElement(level);
+                        parserStateMachine.fromAnywhereForArrayObject(level);
 
                         if (isKeyComplex(key)) {
-                            parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
+                            parserStateMachine.toArrayObject(level, arrayName, arrayIndex);
                             final String keyRight = getKeyRight(key);
                             parseKey(keyRight, fullKey);
                         }
