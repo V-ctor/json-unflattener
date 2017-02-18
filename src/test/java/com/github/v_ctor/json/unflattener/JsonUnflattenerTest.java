@@ -101,17 +101,63 @@ public class JsonUnflattenerTest {
             "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":{\"d\":{\"d\":{\"d\":{\"d\":\"" + TEST_VALUE_2 + "\"}}}},\"e\":\"1.3\"}}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
+    @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
+    public void MapToJsonTestArraySimple() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a[0]", TEST_VALUE_1);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":[\"" + TEST_VALUE_1 + "\"]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
+    public void MapToJsonTestArraySimpleTwoElements() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a[0]", TEST_VALUE_1);
+        data.put("a[1]", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":[\"" + TEST_VALUE_1 + "\",\"" + TEST_VALUE_2 + "\"]}");
+    }
+    @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
+    public void MapToJsonTestArraySimpleThreeElements() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a[0]", TEST_VALUE_1);
+        data.put("a[1]", TEST_VALUE_2);
+        data.put("a[2]", TEST_VALUE_3);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":[\"" + TEST_VALUE_1 + "\",\"" + TEST_VALUE_2 + "\",\"" + TEST_VALUE_3 + "\"]}");
+    }
+    @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
+    public void MapToJsonTestTwoArrayaSimple() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a[0]", TEST_VALUE_1);
+        data.put("b[0]", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":[\"" + TEST_VALUE_1 + "\"],\"b\":[\"" + TEST_VALUE_2 + "\"]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
     public void MapToJsonTestArrayOneVariable() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);
         final OutputStream outputStream = new ByteArrayOutputStream();
-        final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
         jsonUnflattener.parseToJson();
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\"}]}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArrayOneVariable")
+    @Test//(dependsOnMethods = "MapToJsonTestArrayOneVariable")
     public void MapToJsonTestArrayTwoVariables() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b", TEST_VALUE_1);
@@ -119,6 +165,7 @@ public class JsonUnflattenerTest {
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
@@ -184,20 +231,20 @@ public class JsonUnflattenerTest {
             "{\"a\":[{\"b\":[{\"c\":\"value1\"}]},{\"b\":[{\"c\":\"value2\"}]}]}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArray")
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
     public void MapToJsonTestTwoArrays4() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].c", TEST_VALUE_1);
         data.put("d[0].c", TEST_VALUE_2);
-        //        data.put("a[0].url", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(),
             "{\"a\":[{\"c\":\"value1\"}],\"d\":[{\"c\":\"value2\"}]}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArray")
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
     public void MapToJsonTestTwoArrays6() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b.c", TEST_VALUE_1);

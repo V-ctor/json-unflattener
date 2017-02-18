@@ -29,19 +29,21 @@ class ParserStateMachine {
     void toArrayState(int level, String arrayName, int arrayIndex) throws IOException {
         addEntity(arrayName, arrayIndex);
         openArrayEntity(level, arrayName);
-        openArrayElementEntity(level);
+//        openArrayElementEntity(level);
     }
 
     void fromAnywhereForArrayElement(int level) throws IOException {
         downgradeToLevel(level);
         closeAllToLevel(level);
-        closeEntity();
+//        closeEntity();
     }
 
     void toArrayElement(int level, String arrayName, int arrayIndex) throws IOException {
         addEntity(arrayName, arrayIndex);
-        openArrayElementEntity(level);
+//        openArrayElementEntity(level);
     }
+
+//    void
 
     void fromAnywhereForArray(int level) throws IOException {
         downgradeToLevel(level);
@@ -65,7 +67,7 @@ class ParserStateMachine {
         parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserState));
     }
 
-    private void openArrayElementEntity(int level) throws IOException {
+    public void openArrayElementEntity(int level) throws IOException {
         final ParserStates parserState = ParserStates.InArrayElement;
         parserState.open(generator, null);
         parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserState));
@@ -96,7 +98,7 @@ class ParserStateMachine {
     }
 
     boolean isItSameArrayElement(int level, int arrayIndex) {
-        return jsonElementStack.size() > 0 && !jsonElementStack.get(level - 1).getValue().equals(arrayIndex);
+        return jsonElementStack.size() > 0 && /*!*/jsonElementStack.get(level - 1).getValue().equals(arrayIndex);
     }
 
     boolean isItSameObject(int level, String name) {

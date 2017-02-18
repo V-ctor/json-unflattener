@@ -1,0 +1,7 @@
+"a[0].b.c" -> "value1"
+"k.l" -> "value2"
+"h[0].i[0].c" -> "value2"
+"d[0].e[0].ee[0].c" -> "value2"
+"f[0].g.c" -> "value1"
+"g.c" -> "value2"
+"m" -> "value2"
