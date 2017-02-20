@@ -29,13 +29,11 @@ class ParserStateMachine {
     void toArrayState(int level, String arrayName, int arrayIndex) throws IOException {
         addEntity(arrayName, arrayIndex);
         openArrayEntity(level, arrayName);
-//        openArrayElementEntity(level);
     }
 
     void fromAnywhereForArrayElement(int level) throws IOException {
         downgradeToLevel(level);
         closeAllToLevel(level);
-//        closeEntity();
     }
 
     void fromAnywhereForArrayObject(int level) throws IOException {
@@ -45,9 +43,8 @@ class ParserStateMachine {
             closeEntity();
     }
 
-    void toArrayElement(int level, String arrayName, int arrayIndex) throws IOException {
+    void toArrayElement(String arrayName, int arrayIndex) throws IOException {
         addEntity(arrayName, arrayIndex);
-//        openArrayElementEntity(level);
     }
 
     void toArrayObject(int level, String arrayName, int arrayIndex) throws IOException {
@@ -63,7 +60,6 @@ class ParserStateMachine {
     void fromAnywhereForObject(int level) throws IOException {
         downgradeToLevel(level);
         closeAllToLevel(level - 1);
-        closeAndOpenIfLastIsArrayElement(level);
     }
 
     void toObject(int level, String name) throws IOException {
@@ -77,7 +73,7 @@ class ParserStateMachine {
         parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserState));
     }
 
-    public void openArrayElementEntity(int level) throws IOException {
+    void openArrayElementEntity(int level) throws IOException {
         final ParserStates parserState = ParserStates.InArrayElement;
         parserState.open(generator, null);
         parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserState));
@@ -127,23 +123,9 @@ class ParserStateMachine {
         }
     }
 
-    private boolean isLastState(ParserStates parserState) {
-        return parserStateDeque.size() > 0 && parserStateDeque.getLast().getValue().equals(parserState);
-    }
-
-    private void closeAndOpenIfLastIsArrayElement(int level) throws IOException {
-        if (isLastState(ParserStates.InArrayElement)) {
-            closeEntity();
-            openArrayElementEntity(level);
-        }
-    }
-
     void fromAnywhereToField(int level) throws IOException {
         downgradeToLevel(level);
         closeAllToLevel(level - 1);
-        if (isLastState(ParserStates.InArray)) {
-            closeEntity();
-        }
     }
 }
 

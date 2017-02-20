@@ -44,7 +44,6 @@ public class JsonUnflattenerTest {
     public void MapToJsonTestOneSubVariable() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
-        //        data.put("b", "search.domain");
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
@@ -56,10 +55,10 @@ public class JsonUnflattenerTest {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
         data.put("a.c", TEST_VALUE_2);
-        //        data.put("b", "search.domain");
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}}");
     }
 
@@ -80,12 +79,62 @@ public class JsonUnflattenerTest {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
         data.put("a.c.d", TEST_VALUE_2);
-        data.put("a.e", "1.3");
+        data.put("a.e", TEST_VALUE_3);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":{\"d\":\"" + TEST_VALUE_2 +
-            "\"},\"e\":\"1.3\"}}");
+            "\"},\"e\":\"" + TEST_VALUE_3 + "\"}}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
+    public void MapToJsonTestThreeSubVariables3() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a.b.c", TEST_VALUE_1);
+        data.put("a.b.d", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":{\"b\":{\"c\":\"" + TEST_VALUE_1 + "\",\"d\":\"" + TEST_VALUE_2 + "\"}}}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
+    public void MapToJsonTestThreeSubVariables4() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a.b.c", TEST_VALUE_1);
+        data.put("a.d.e", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":{\"b\":{\"c\":\"" + TEST_VALUE_1 + "\"},\"d\":{\"e\":\"" + TEST_VALUE_2 + "\"}}}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
+    public void MapToJsonTestThreeSubVariables5() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a.b.c.d", TEST_VALUE_1);
+        data.put("a.e.f", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":{\"b\":{\"c\":{\"d\":\"value1\"}},\"e\":{\"f\":\"" + TEST_VALUE_2 + "\"}}}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
+    public void MapToJsonTestThreeSubVariables6() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a.b.c", TEST_VALUE_1);
+        data.put("a.d.e.f", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(),
+            "{\"a\":{\"b\":{\"c\":\"" + TEST_VALUE_1 + "\"},\"d\":{\"e\":{\"f\":\"" + TEST_VALUE_2 + "\"}}}}");
     }
 
     @Test(dependsOnMethods = "MapToJsonTestThreeSubVariables")
@@ -177,6 +226,7 @@ public class JsonUnflattenerTest {
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\"},{\"b\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
@@ -192,17 +242,17 @@ public class JsonUnflattenerTest {
             "{\"a\":[{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\"}],\"url\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArray")
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
     public void MapToJsonTestTwoArrays() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[0].d.e", TEST_VALUE_2);
-        //        data.put("a[0].url", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(),
-            "{\"a\":[{\"b\":[{\"c\":\"value1\"}]},{\"d\":{\"e\":\"value2\"}}]}");
+            "{\"a\":[{\"b\":[{\"c\":\"value1\"}],\"d\":{\"e\":\"" + TEST_VALUE_2 + "\"}}]}");
     }
 
     @Test(dependsOnMethods = "MapToJsonTestArray")
@@ -210,7 +260,6 @@ public class JsonUnflattenerTest {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[1].b[0].c", TEST_VALUE_2);
-        //        data.put("a[0].url", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
@@ -223,12 +272,74 @@ public class JsonUnflattenerTest {
         final Map<String, String> data = new HashMap();
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[1].b[1].c", TEST_VALUE_2);
-        //        data.put("a[0].url", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
         assertEquals(outputStream.toString(),
-            "{\"a\":[{\"b\":[{\"c\":\"value1\"}]},{\"b\":[{\"c\":\"value2\"}]}]}");
+            "{\"a\":[{\"b\":[{\"c\":\"value1\"}]},{\"b\":[{\"c\":\"" + TEST_VALUE_2 + "\"}]}]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
+    public void MapToJsonTestTwoArrays5() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a[0].b[0].c", TEST_VALUE_1);
+        data.put("a[0].b[1].c", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(),
+            "{\"a\":[{\"b\":[{\"c\":\"value1\"},{\"c\":\"" + TEST_VALUE_2 + "\"}]}]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
+    public void MapToJsonTestTwoArrays7() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a[0].b[0]", TEST_VALUE_1);
+        data.put("a[0].b[1]", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(),
+            "{\"a\":[{\"b\":[\"" + TEST_VALUE_1 + "\",\"" + TEST_VALUE_2 + "\"]}]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
+    public void MapToJsonTestTwoArrays8() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a[0].b.c", TEST_VALUE_1);
+        data.put("a[0].b.d", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(),
+            "{\"a\":[{\"b\":{\"c\":\"" + TEST_VALUE_1 + "\",\"d\":\"" + TEST_VALUE_2 + "\"}}]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
+    public void MapToJsonTestTwoArrays9() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a.b[0]", TEST_VALUE_1);
+        data.put("a.b[1]", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":{\"b\":[\"value1\",\"value2\"]}}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
+    public void MapToJsonTestTwoArrays10() throws IOException {
+        final Map<String, String> data = new HashMap();
+        data.put("a.b[0].c", TEST_VALUE_1);
+        data.put("a.b[1].c", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":{\"b\":[{\"c\":\"value1\"},{\"c\":\"value2\"}]}}");
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
@@ -241,7 +352,7 @@ public class JsonUnflattenerTest {
         jsonUnflattener.parseToJson();
         System.out.println(outputStream);
         assertEquals(outputStream.toString(),
-            "{\"a\":[{\"c\":\"value1\"}],\"d\":[{\"c\":\"value2\"}]}");
+            "{\"a\":[{\"c\":\""+TEST_VALUE_1+"\"}],\"d\":[{\"c\":\""+TEST_VALUE_2+"\"}]}");
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
@@ -259,8 +370,8 @@ public class JsonUnflattenerTest {
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
         assertEquals(outputStream.toString(),
-            "{\"a\":[{\"b\":{\"c\":\"value1\"}}],\"d\":[{\"e\":[{\"ee\":[{\"c\":\"value2\"}]}]}],\"f\":[{\"g\":{\"c\":\"value1\"}}]," +
-                "\"g\":{\"c\":\"value2\"},\"h\":[{\"i\":[{\"c\":\"value2\"}]}],\"k\":{\"l\":\"value2\"},\"m\":\"value2\"}");
+            "{\"a\":[{\"b\":{\"c\":\""+ TEST_VALUE_1 + "\"}}],\"d\":[{\"e\":[{\"ee\":[{\"c\":\"" + TEST_VALUE_2 + "\"}]}]}],\"f\":[{\"g\":{\"c\":\"" + TEST_VALUE_1 + "\"}}]," +
+                "\"g\":{\"c\":\"" + TEST_VALUE_2 + "\"},\"h\":[{\"i\":[{\"c\":\"" + TEST_VALUE_2 + "\"}]}],\"k\":{\"l\":\"" + TEST_VALUE_2 + "\"},\"m\":\"" + TEST_VALUE_2 + "\"}");
     }
 
     @Test(dependsOnMethods = "MapToJsonTestTwoArrays")
@@ -290,7 +401,7 @@ public class JsonUnflattenerTest {
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
         assertEquals(outputStream.toString(),
-            "{\"a\":[{\"b\":[{\"c\":\"value1\",\"d\":\"value3\",\"e\":\"value4\",\"f\":\"\"},{\"c\":\"value1\",\"e\":\"value4\",\"f\":\"\",\"g\":\"10\",\"h\":\"10000\"},{\"c\":\"value1\",\"e\":\"value4\",\"f\":\"\",\"g\":\"20\",\"h\":\"20000\"}],\"url\":\"value2\"},{\"b\":[{\"c\":\"value1\",\"d\":\"value3\"}],\"url\":\"value2\"}]}");
+            "{\"a\":[{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\",\"d\":\"value3\",\"e\":\"value4\",\"f\":\"\"},{\"c\":\"" + TEST_VALUE_1 + "\",\"e\":\"value4\",\"f\":\"\",\"g\":\"10\",\"h\":\"10000\"},{\"c\":\"" + TEST_VALUE_1 + "\",\"e\":\"value4\",\"f\":\"\",\"g\":\"20\",\"h\":\"20000\"}],\"url\":\"" + TEST_VALUE_2 + "\"},{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\",\"d\":\"value3\"}],\"url\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
     @Test

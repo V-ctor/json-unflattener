@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -42,7 +41,7 @@ public class JsonUnflattener {
     }
 
     private Map<String, String> convertMultiValueMapToSingleValue(FlatterenMapStringStringArray data) {
-        Map<String, String> jsonMap = new HashMap<>();
+        Map<String, String> jsonMap;
         jsonMap = data.get().entrySet().stream()
             .filter(
                 obj -> {
@@ -51,7 +50,7 @@ public class JsonUnflattener {
                     return true;
                 }
             )
-            .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()[0]));
+            .collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue()[0]));
         return jsonMap;
     }
 
@@ -81,29 +80,25 @@ public class JsonUnflattener {
 
             if (!parserStateMachine.isBranchDeeper(level)) { //is it new array?
                  parserStateMachine.toArrayState(level, arrayName, arrayIndex);
-//                generator.writeString(data.get(fullKey));
                 if (isKeyComplex(key)) {
-                    //                    parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
                     parserStateMachine.openArrayElementEntity(level);
                     final String keyRight = getKeyRight(key);
                     parseKey(keyRight, fullKey);
                 } else {
-//                    parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
                     generator.writeString(data.get(fullKey));
                 }
 
             } else {
                 if (parserStateMachine.isItSameArray(level, arrayName)) {  //same array
                     if (parserStateMachine.isItSameArrayElement(level, arrayIndex)) { // same array element
-                        parserStateMachine.fromAnywhereForArrayElement(level);
 
                         if (isKeyComplex(key)) {
-                            parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
                             final String keyRight = getKeyRight(key);
                             parseKey(keyRight, fullKey);
                         }
                         else {
-                            parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
+                            parserStateMachine.fromAnywhereForArrayElement(level);
+                            parserStateMachine.toArrayElement(arrayName, arrayIndex);
                             generator.writeString(data.get(fullKey));
                         }
                     } else { //new array element
@@ -115,7 +110,7 @@ public class JsonUnflattener {
                             parseKey(keyRight, fullKey);
                         }
                         else {
-                            parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
+                            parserStateMachine.toArrayElement(arrayName, arrayIndex);
                             generator.writeString(data.get(fullKey));
                         }
 
@@ -125,13 +120,12 @@ public class JsonUnflattener {
                     parserStateMachine.toArrayState(level, arrayName, arrayIndex);
 
                     if (isKeyComplex(key)) {
-//                        parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
                         parserStateMachine.openArrayElementEntity(level);
                         final String keyRight = getKeyRight(key);
                         parseKey(keyRight, fullKey);
                     }
                     else {
-                        parserStateMachine.toArrayElement(level, arrayName, arrayIndex);
+                        parserStateMachine.toArrayElement(arrayName, arrayIndex);
                         generator.writeString(data.get(fullKey));
                     }
 
@@ -155,18 +149,6 @@ public class JsonUnflattener {
                     generator.writeStringField(key, data.get(fullKey));
                 }
         }
-
-
-
-            /*
-        if (isKeyComplex(key)) {
-            final String keyRight = getKeyRight(key);
-
-            parseKey(keyRight, fullKey);
-        } else {//simple field
-            parserStateMachine.fromAnywhereToField(level);
-            generator.writeStringField(key, data.get(fullKey));
-        }*/
         level--;
     }
 
