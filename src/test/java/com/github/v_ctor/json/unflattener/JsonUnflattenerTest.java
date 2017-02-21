@@ -26,6 +26,7 @@ public class JsonUnflattenerTest {
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(), "{\"a\":\"" + TEST_VALUE_1 + "\"}");
     }
 
@@ -37,16 +38,18 @@ public class JsonUnflattenerTest {
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(), "{\"a\":\"" + TEST_VALUE_1 + "\",\"b\":\"" + TEST_VALUE_2 + "\"}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestTwoVariables")
+    @Test//(dependsOnMethods = "MapToJsonTestTwoVariables")
     public void MapToJsonTestOneSubVariable() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\"}}");
     }
 
@@ -62,16 +65,17 @@ public class JsonUnflattenerTest {
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArray")
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
     public void MapToJsonTestTwoSubVariables2() throws IOException {
         final Map<String, String> data = new HashMap();
-        data.put("a.b", TEST_VALUE_2);
+        data.put("a.b", TEST_VALUE_1);
         data.put("c.d", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(()->data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(),
-            "{\"a\":{\"b\":\"value2\"},\"c\":{\"d\":\"value2\"}}");
+            "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\"},\"c\":{\"d\":\"" + TEST_VALUE_2 + "\"}}");
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
@@ -137,7 +141,7 @@ public class JsonUnflattenerTest {
             "{\"a\":{\"b\":{\"c\":\"" + TEST_VALUE_1 + "\"},\"d\":{\"e\":{\"f\":\"" + TEST_VALUE_2 + "\"}}}}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestThreeSubVariables")
+    @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables")
     public void MapToJsonTestThreeSubVariables2() throws IOException {
         final Map<String, String> data = new HashMap();
         data.put("a.b", TEST_VALUE_1);
