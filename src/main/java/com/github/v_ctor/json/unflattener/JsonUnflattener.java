@@ -21,7 +21,7 @@ public class JsonUnflattener {
     private Map<String, String> data;
     private final OutputStream out;
     private final JsonGenerator generator;
-    private final ParserStateMachine parserStateMachine;
+    //    private final ParserStateMachine parserStateMachine;
     private final ArrayList<Map.Entry<String, Integer>> stack = new ArrayList<>();
 
     //    private int level;
@@ -31,7 +31,7 @@ public class JsonUnflattener {
         this.out = out;
         final JsonFactory factory = new JsonFactory();
         this.generator = factory.createGenerator(out, JsonEncoding.UTF8);
-        this.parserStateMachine = new ParserStateMachine(generator);
+        //        this.parserStateMachine = new ParserStateMachine(generator);
     }
 
     public JsonUnflattener(FlatterenMapStringString data, OutputStream out) throws IOException {
@@ -65,7 +65,16 @@ public class JsonUnflattener {
             //            level = 0;
             parseKey(key, key);
         }
-        parserStateMachine.closeAll();
+
+        ListIterator<Map.Entry<String, Integer>> iterator = stack.listIterator(stack.size());
+        while (iterator.hasPrevious()) {
+            Map.Entry<String, Integer> element = iterator.previous();
+            if (element.getValue() == null) {
+                ParserStates.InObject.close(generator);
+            } else {
+                ParserStates.InArray.close(generator);
+            }
+        }
 
         generator.writeEndObject();
 
@@ -82,18 +91,43 @@ public class JsonUnflattener {
         Map.Entry<String, Integer> jsonElement = null;
         final ArrayList<Map.Entry<String, Integer>> stackLocal = new ArrayList<>();
 
-        for (/*Iterator<Map.Entry<String, Integer>> iterator = stack.iterator()*/int i = 0; isKeyComplex(key) || isKeyElementOfArray(keyLeft);
-                                                                                 keyLeft = getKeyLeft(key), i++) {
+        for (/*Iterator<Map.Entry<String, Integer>> iterator = stack.iterator()*/
+            int i = 0;
+            isKeyComplex(key) || isKeyElementOfArray(keyLeft);
+            key = getKeyRight(key),
+                keyLeft = getKeyLeft(key),
+                i++
+            ) {
+
             if (i <= stack.size() - 1) {
-//                jsonElement = iterator.next();
+                //                jsonElement = iterator.next();
                 jsonElement = stack.get(i);
                 if (!jsonElement.getKey().equals(keyLeft)) {
                     //закрываем сущности
-                    closeAllToElement(jsonElement);
                     if (isKeyElementOfArray(keyLeft)) {
-                        stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
-                        ParserStates.InArray.open(generator, keyLeft);
+                        final String arrayName = getFieldNameFromKey(keyLeft);
+                        if (!jsonElement.getKey().equals(arrayName)) {
+                            closeAllToElement(jsonElement);
+                            stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
+                            ParserStates.InArray.open(generator, arrayName);
+                            if (isKeyComplex(key)) {
+                                stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
+                                ParserStates.InObject.open(generator, keyLeft);
+                            }
+                        } else {
+                            final int arrayIndex = getIndexFromKey(keyLeft);
+                            if (!jsonElement.getValue().equals(arrayIndex)) {
+                                closeAllBeforeElement(jsonElement);
+                                stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
+                                if (isKeyComplex(key)) {
+                                    stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
+                                    ParserStates.InArrayElement.open(generator, keyLeft);
+                                }
+
+                            }
+                        }
                     } else {
+                        closeAllToElement(jsonElement);
                         stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, null));
                         ParserStates.InObject.open(generator, keyLeft);
                     }
@@ -103,22 +137,37 @@ public class JsonUnflattener {
                     final String arrayName = getFieldNameFromKey(keyLeft);
                     stackLocal.add(new AbstractMap.SimpleEntry<>(arrayName, getIndexFromKey(keyLeft)));
                     ParserStates.InArray.open(generator, arrayName);
+                    /*if (!isKeyComplex(key)) {
+
+                    }*/
+                    if (isKeyComplex(key)) {
+                        stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
+                        ParserStates.InArrayElement.open(generator, keyLeft);
+                    }
                 } else {
                     stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, null));
                     ParserStates.InObject.open(generator, keyLeft);
                 }
-
             }
 
-            final String keyRight = getKeyRight(key);
-            key = keyRight;
+            //            final String keyRight = getKeyRight(key);
+            //            key = keyRight;
         }
 
         if (stackLocal.size() == 0) {
             closeAllBeforeElement(jsonElement);
         }
         stack.addAll(stackLocal);
-        generator.writeStringField(key, data.get(fullKey));
+
+        if (key != null) {
+/*            if (stack.get(stack.size() - 1).getKey() != null) {
+                stackLocal.add(new AbstractMap.SimpleEntry<>(stack.get(stack.size() - 1).getValue().toString(), null));
+                ParserStates.InArrayElement.open(generator, null);
+            }*/
+            generator.writeStringField(key, data.get(fullKey));
+        } else
+            generator.writeString(data.get(fullKey));
+
     }
 
     private void closeAllToElement(Map.Entry<String, Integer> jsonElement) throws IOException {
@@ -126,13 +175,24 @@ public class JsonUnflattener {
             return;
         for (ListIterator<Map.Entry<String, Integer>> iteratorReverse = stack.listIterator(stack.size());
              iteratorReverse.hasPrevious(); ) {
-            final Map.Entry<String, Integer> jsonElementReverse = iteratorReverse.previous();
-            //            if (jsonElement != jsonElementReverse  /*|| !iteratorReverse.hasPrevious()*/) {
+/*            final Map.Entry<String, Integer> jsonElementReverse = iteratorReverse.previous();
+            //            if (jsonElement != jsonElementReverse  *//*|| !iteratorReverse.hasPrevious()*//*) {
             //                            jsonElementReverse.
             ParserStates.InObject.close(generator);
             //            }
+            iteratorReverse.remove();*/
+
+
+            final Map.Entry<String, Integer> element = iteratorReverse.previous();
+            if (element.getValue() == null) {
+                ParserStates.InObject.close(generator);
+            } else {
+                ParserStates.InArray.close(generator);
+            }
             iteratorReverse.remove();
-            if (jsonElement == jsonElementReverse) {
+
+
+            if (jsonElement == element) {
                 break;
             }
         }
@@ -144,6 +204,7 @@ public class JsonUnflattener {
         for (ListIterator<Map.Entry<String, Integer>> iteratorReverse = stack.listIterator(stack.size());
              iteratorReverse.hasPrevious(); ) {
             final Map.Entry<String, Integer> jsonElementReverse = iteratorReverse.previous();
+            iteratorReverse.remove();
             if (jsonElement == jsonElementReverse) {
                 break;
             }
@@ -151,7 +212,6 @@ public class JsonUnflattener {
                 //                            jsonElementReverse.
                 ParserStates.InObject.close(generator);
             }
-            iteratorReverse.remove();
         }
     }
    /*     level++;
@@ -233,15 +293,19 @@ public class JsonUnflattener {
 
 
     private static boolean isKeyComplex(String key) {
+        if (key == null)
+            return false;
         return key.split("\\.").length > 1;
     }
 
     private static String getKeyLeft(String key) {
+        if (key == null)
+            return null;
         return key.split("\\.")[0];
     }
 
     private static String getKeyRight(String key) {
-        assert isKeyComplex(key);
+        //        assert isKeyComplex(key);
         return getSecondPartOfKey(key, getKeyLeft(key));
     }
 
@@ -259,6 +323,8 @@ public class JsonUnflattener {
     }
 
     private static boolean isKeyElementOfArray(String key) {
+        if (key == null)
+            return false;
         return getKeyArrayIndexMatcher(key).find();
     }
 
