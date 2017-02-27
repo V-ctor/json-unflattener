@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeSet;
@@ -82,14 +81,17 @@ public class JsonUnflattener {
         String keyLeft = getKeyLeft(key);
         Map.Entry<String, Integer> jsonElement = null;
         final ArrayList<Map.Entry<String, Integer>> stackLocal = new ArrayList<>();
-        for (Iterator<Map.Entry<String, Integer>> iterator = stack.iterator(); isKeyComplex(key); keyLeft = getKeyLeft(key)) {
-            if (iterator.hasNext()) {
-                jsonElement = iterator.next();
+
+        for (/*Iterator<Map.Entry<String, Integer>> iterator = stack.iterator()*/int i = 0; isKeyComplex(key) || isKeyElementOfArray(keyLeft);
+                                                                                 keyLeft = getKeyLeft(key), i++) {
+            if (i <= stack.size() - 1) {
+//                jsonElement = iterator.next();
+                jsonElement = stack.get(i);
                 if (!jsonElement.getKey().equals(keyLeft)) {
                     //закрываем сущности
                     closeAllToElement(jsonElement);
                     if (isKeyElementOfArray(keyLeft)) {
-                        stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, getIndexFromKey(keyLeft)));
+                        stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
                         ParserStates.InArray.open(generator, keyLeft);
                     } else {
                         stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, null));
@@ -98,8 +100,9 @@ public class JsonUnflattener {
                 }
             } else {
                 if (isKeyElementOfArray(keyLeft)) {
-                    stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, getIndexFromKey(keyLeft)));
-                    ParserStates.InArray.open(generator, keyLeft);
+                    final String arrayName = getFieldNameFromKey(keyLeft);
+                    stackLocal.add(new AbstractMap.SimpleEntry<>(arrayName, getIndexFromKey(keyLeft)));
+                    ParserStates.InArray.open(generator, arrayName);
                 } else {
                     stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, null));
                     ParserStates.InObject.open(generator, keyLeft);
@@ -111,7 +114,6 @@ public class JsonUnflattener {
             key = keyRight;
         }
 
-        //        if (keyParts(key)<)
         if (stackLocal.size() == 0) {
             closeAllBeforeElement(jsonElement);
         }
