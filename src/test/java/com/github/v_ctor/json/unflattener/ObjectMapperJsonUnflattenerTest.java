@@ -4,6 +4,7 @@ package com.github.v_ctor.json.unflattener;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -11,10 +12,10 @@ import static org.testng.Assert.assertEquals;
 
 public class ObjectMapperJsonUnflattenerTest {
 
-    public static final String TEST_VALUE_1 = "value1";
-    public static final String TEST_VALUE_2 = "value2";
-    public static final String TEST_VALUE_3 = "value3";
-    public static final String TEST_VALUE_4 = "value4";
+    private static final String TEST_VALUE_1 = "value1";
+    private static final String TEST_VALUE_2 = "value2";
+    private static final String TEST_VALUE_3 = "value3";
+    private static final String TEST_VALUE_4 = "value4";
 
     @Test
     public void testReadValue() throws Exception {
@@ -60,41 +61,58 @@ public class ObjectMapperJsonUnflattenerTest {
         List<Integer> intArr = new ArrayList<>();
         String strArr[] = new String[3];
 
-        public Entity() {
+        Entity() {
         }
 
-        public int getI() {
+        int getI() {
             return i;
         }
 
-        public void setI(int i) {
+        void setI(int i) {
             this.i = i;
         }
 
-        public String getStr() {
+        String getStr() {
             return str;
         }
 
-        public void setStr(String str) {
+        void setStr(String str) {
             this.str = str;
         }
 
-        public List<Integer> getIntArr() {
+        List<Integer> getIntArr() {
             return intArr;
         }
 
-        public void setIntArr(List<Integer> intArr) {
+        void setIntArr(List<Integer> intArr) {
             this.intArr = intArr;
         }
 
-        public String[] getStrArr() {
+        String[] getStrArr() {
             return strArr;
         }
 
-        public void setStrArr(String[] strArr) {
+        void setStrArr(String[] strArr) {
             this.strArr = strArr;
         }
 
+        @Override public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            Entity entity = (Entity) o;
+
+            if (i != entity.i)
+                return false;
+            if (str != null ? !str.equals(entity.str) : entity.str != null)
+                return false;
+            if (intArr != null ? !intArr.equals(entity.intArr) : entity.intArr != null)
+                return false;
+            // Probably incorrect - comparing Object[] arrays with Arrays.equals
+            return Arrays.equals(strArr, entity.strArr);
+        }
 
     }
 }
