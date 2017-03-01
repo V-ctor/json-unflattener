@@ -36,31 +36,7 @@ public enum ParserStateEnum {
         }
     };
 
-    private String name;
-    private Integer index;
-
     abstract void open(JsonGenerator generator, String fieldName) throws IOException;
 
     abstract void close(JsonGenerator generator) throws IOException;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getIndex() {
-        return index;
-    }
-
-    public void setIndex(Integer index) {
-        this.index = index;
-    }
-
-    public void setNameIndex(String name, Integer index){
-        this.name = name;
-        this.index = index;
-    }
 }

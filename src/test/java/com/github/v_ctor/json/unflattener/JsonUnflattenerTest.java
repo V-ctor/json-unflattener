@@ -13,14 +13,14 @@ import static org.testng.Assert.assertEquals;
 
 public class JsonUnflattenerTest {
 
-    public static final String TEST_VALUE_1 = "value1";
-    public static final String TEST_VALUE_2 = "value2";
-    public static final String TEST_VALUE_3 = "value3";
-    public static final String TEST_VALUE_4 = "value4";
+    private static final String TEST_VALUE_1 = "value1";
+    private static final String TEST_VALUE_2 = "value2";
+    private static final String TEST_VALUE_3 = "value3";
+    private static final String TEST_VALUE_4 = "value4";
 
     @Test
-    public void MapToJsonTestOneVariable() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestOneVariable() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a", TEST_VALUE_1);
 
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -31,8 +31,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test(dependsOnMethods = "MapToJsonTestOneVariable")
-    public void MapToJsonTestTwoVariables() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoVariables() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a", TEST_VALUE_1);
         data.put("b", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -43,8 +43,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestTwoVariables")
-    public void MapToJsonTestOneSubVariable() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestOneSubVariable() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b", TEST_VALUE_1);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
@@ -54,8 +54,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test(dependsOnMethods = "MapToJsonTestOneSubVariable")
-    public void MapToJsonTestTwoSubVariables() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoSubVariables() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b", TEST_VALUE_1);
         data.put("a.c", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -65,9 +65,21 @@ public class JsonUnflattenerTest {
         assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":\"" + TEST_VALUE_2 + "\"}}");
     }
 
+    @Test//(dependsOnMethods = "MapToJsonTestOneSubVariable")
+    void MapToJsonTestOneVariableAndOneSubVariable() throws IOException {
+        final Map<String, String> data = new HashMap<>();
+        data.put("a.b", TEST_VALUE_1);
+        data.put("c", TEST_VALUE_2);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
+        assertEquals(outputStream.toString(), "{\"a\":{\"b\":\"" + TEST_VALUE_1 + "\"},\"c\":\"" + TEST_VALUE_2 + "\"}");
+    }
+
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoSubVariables2() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoSubVariables2() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b", TEST_VALUE_1);
         data.put("c.d", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -79,8 +91,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
-    public void MapToJsonTestThreeSubVariables() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestThreeSubVariables() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b", TEST_VALUE_1);
         data.put("a.c.d", TEST_VALUE_2);
         data.put("a.e", TEST_VALUE_3);
@@ -93,8 +105,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
-    public void MapToJsonTestThreeSubVariables3() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestThreeSubVariables3() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b.c", TEST_VALUE_1);
         data.put("a.b.d", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -105,8 +117,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
-    public void MapToJsonTestThreeSubVariables4() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestThreeSubVariables4() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b.c", TEST_VALUE_1);
         data.put("a.d.e", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -117,8 +129,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
-    public void MapToJsonTestThreeSubVariables5() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestThreeSubVariables5() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b.c.d", TEST_VALUE_1);
         data.put("a.e.f", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -129,8 +141,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestTwoSubVariables")
-    public void MapToJsonTestThreeSubVariables6() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestThreeSubVariables6() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b.c", TEST_VALUE_1);
         data.put("a.d.e.f", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -142,8 +154,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables")
-    public void MapToJsonTestThreeSubVariables2() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestThreeSubVariables2() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b", TEST_VALUE_1);
         data.put("a.c.d.d.d.d", TEST_VALUE_2);
         data.put("a.e", "1.3");
@@ -155,8 +167,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
-    public void MapToJsonTestArraySimple() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestArraySimple() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0]", TEST_VALUE_1);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
@@ -166,8 +178,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
-    public void MapToJsonTestArraySimpleTwoElements() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestArraySimpleTwoElements() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0]", TEST_VALUE_1);
         data.put("a[1]", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -178,8 +190,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
-    public void MapToJsonTestArraySimpleThreeElements() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestArraySimpleThreeElements() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0]", TEST_VALUE_1);
         data.put("a[1]", TEST_VALUE_2);
         data.put("a[2]", TEST_VALUE_3);
@@ -191,8 +203,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
-    public void MapToJsonTestTwoArraySimple() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArraySimple() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0]", TEST_VALUE_1);
         data.put("b[0]", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -203,8 +215,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestThreeSubVariables2")
-    public void MapToJsonTestArrayOneVariable() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestArrayOneVariable() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b", TEST_VALUE_1);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
@@ -214,8 +226,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArrayOneVariable")
-    public void MapToJsonTestArrayTwoVariables() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestArrayTwoVariables() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b", TEST_VALUE_1);
         data.put("a[0].c", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -226,8 +238,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArrayTwoVariables")
-    public void MapToJsonTestArrayTwoElements() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestArrayTwoElements() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b", TEST_VALUE_1);
         data.put("a[1].b", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -237,21 +249,22 @@ public class JsonUnflattenerTest {
         assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\"},{\"b\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArrayTwoElements")
-    public void MapToJsonTestArray() throws IOException {
-        final Map<String, String> data = new HashMap();
+    @Test//(dependsOnMethods = "MapToJsonTestArrayTwoElements")
+    void MapToJsonTestArray() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b[0].c", TEST_VALUE_1);
-        data.put("a[0].url", TEST_VALUE_2);
+        data.put("a[0].d", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
         final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
         jsonUnflattener.parseToJson();
+        System.out.println(outputStream);
         assertEquals(outputStream.toString(),
-            "{\"a\":[{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\"}],\"url\":\"" + TEST_VALUE_2 + "\"}]}");
+            "{\"a\":[{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\"}],\"d\":\"" + TEST_VALUE_2 + "\"}]}");
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArrays() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[0].d.e", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -262,9 +275,9 @@ public class JsonUnflattenerTest {
             "{\"a\":[{\"b\":[{\"c\":\"value1\"}],\"d\":{\"e\":\"" + TEST_VALUE_2 + "\"}}]}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays2() throws IOException {
-        final Map<String, String> data = new HashMap();
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
+    void MapToJsonTestTwoArrays2() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[1].b[0].c", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -274,9 +287,9 @@ public class JsonUnflattenerTest {
             "{\"a\":[{\"b\":[{\"c\":\"" + TEST_VALUE_1 + "\"}]},{\"b\":[{\"c\":\"" + TEST_VALUE_2 + "\"}]}]}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays3() throws IOException {
-        final Map<String, String> data = new HashMap();
+    @Test//(dependsOnMethods = "MapToJsonTestArray")
+    void MapToJsonTestTwoArrays3() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[1].b[1].c", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -287,8 +300,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays5() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArrays5() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b[0].c", TEST_VALUE_1);
         data.put("a[0].b[1].c", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -300,8 +313,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays7() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArrays7() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b[0]", TEST_VALUE_1);
         data.put("a[0].b[1]", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -313,8 +326,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays8() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArrays8() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b.c", TEST_VALUE_1);
         data.put("a[0].b.d", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -326,8 +339,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays9() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArrays9() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b[0]", TEST_VALUE_1);
         data.put("a.b[1]", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -338,8 +351,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays10() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArrays10() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a.b[0].c", TEST_VALUE_1);
         data.put("a.b[1].c", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -350,8 +363,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays4() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArrays4() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].c", TEST_VALUE_1);
         data.put("d[0].c", TEST_VALUE_2);
         final OutputStream outputStream = new ByteArrayOutputStream();
@@ -363,8 +376,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestArray")
-    public void MapToJsonTestTwoArrays6() throws IOException {
-        final Map<String, String> data = new HashMap();
+    void MapToJsonTestTwoArrays6() throws IOException {
+        final Map<String, String> data = new HashMap<>();
         data.put("a[0].b.c", TEST_VALUE_1);
         data.put("d[0].e[0].ee[0].c", TEST_VALUE_2);
         data.put("f[0].g.c", TEST_VALUE_1);
@@ -383,9 +396,9 @@ public class JsonUnflattenerTest {
                 "\"},\"m\":\"" + TEST_VALUE_2 + "\"}");
     }
 
-    @Test(dependsOnMethods = "MapToJsonTestTwoArrays")
-    public void MapToJsonTestFull() throws IOException {
-        final Map<String, String> data = new HashMap();
+    @Test//(dependsOnMethods = "MapToJsonTestTwoArrays")
+    void MapToJsonTestFull() throws IOException {
+        final Map<String, String> data = new HashMap<>();
 
         data.put("a[0].url", TEST_VALUE_2);
         data.put("a[0].b[0].c", TEST_VALUE_1);
@@ -417,8 +430,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test
-    public void MapToJsonTest() throws IOException {
-        final Map<String, String[]> data = new HashMap();
+    void MapToJsonTest() throws IOException {
+        final Map<String, String[]> data = new HashMap<>();
         data.put("a", new String[] {TEST_VALUE_1});
         data.put("b", new String[] {TEST_VALUE_2});
 
@@ -430,8 +443,8 @@ public class JsonUnflattenerTest {
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
-    public void MapToJsonTestException() throws IOException {
-        final Map<String, String[]> data = new HashMap();
+    void MapToJsonTestException() throws IOException {
+        final Map<String, String[]> data = new HashMap<>();
         data.put("a", new String[] {TEST_VALUE_1});
         data.put("b", new String[] {TEST_VALUE_1, TEST_VALUE_2});
 
