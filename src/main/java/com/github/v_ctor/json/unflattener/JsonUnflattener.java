@@ -3,35 +3,28 @@ package com.github.v_ctor.json.unflattener;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.github.v_ctor.json.unflattener.ParserStateEnum.InArray;
 import static com.github.v_ctor.json.unflattener.ParserStateEnum.InArrayElement;
-import static com.github.v_ctor.json.unflattener.ParserStateEnum.InObject;
 
 @SuppressWarnings("WeakerAccess")
 public class JsonUnflattener {
     private Map<String, String> data;
     private final OutputStream out;
-    private final JsonGenerator generator;
-    private final ArrayList<ParserState> stack = new ArrayList<>();
-
+    private JsonUnflattenerState jsonUnflattenerState;
 
     @SuppressWarnings("WeakerAccess")
     private JsonUnflattener(OutputStream out) throws IOException {
         this.out = out;
         final JsonFactory factory = new JsonFactory();
-        this.generator = factory.createGenerator(out, JsonEncoding.UTF8);
+        jsonUnflattenerState = new JsonUnflattenerState(factory.createGenerator(out, JsonEncoding.UTF8));
     }
 
     public JsonUnflattener(FlatterenMapStringString data, OutputStream out) throws IOException {
@@ -60,18 +53,12 @@ public class JsonUnflattener {
 
     @SuppressWarnings("WeakerAccess")
     public OutputStream parseToJson() throws IOException {
-        generator.writeStartObject();
+        jsonUnflattenerState.openJson();
         for (String key : new TreeSet<>(data.keySet())) {
             parseKey(key);
         }
 
-        ListIterator<ParserState> iterator = stack.listIterator(stack.size());
-        while (iterator.hasPrevious()) {
-            iterator.previous().close();
-        }
-
-        generator.writeEndObject();
-        generator.close();
+        jsonUnflattenerState.closeJson();
 
         return out;
     }
@@ -80,7 +67,6 @@ public class JsonUnflattener {
         final String fullKey = key;
         String keyLeft = getKeyLeft(key);
         ParserState jsonElement = null;
-        final ArrayList<ParserState> stackLocal = new ArrayList<>();
 
         for (int i = 0;
              isKeyComplex(key) || isKeyElementOfArray(keyLeft);
@@ -89,108 +75,56 @@ public class JsonUnflattener {
                  i++
             ) {
 
-            if (i <= stack.size() - 1) {
-                while (stack.get(i).getParserStateEnum().equals(InArrayElement)) {
+            if (i <= jsonUnflattenerState.size() - 1) {
+                while (jsonUnflattenerState.get(i).getParserStateEnum().equals(InArrayElement)) {
                     i++;
                 }
-                jsonElement = stack.get(i);
+                jsonElement = jsonUnflattenerState.get(i);
                 if (!jsonElement.getName().equals(keyLeft)) {
                     //closing entities
                     if (isKeyElementOfArray(keyLeft)) {
                         final String arrayName = getFieldNameFromKey(keyLeft);
                         if (!jsonElement.getName().equals(arrayName)) {
-                            closeAllToElement(jsonElement);
-                            stackLocal.add(new ParserState(InArray, generator, getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
+                            jsonUnflattenerState.closeAllToElement(jsonElement);
+                            jsonUnflattenerState.addAndOpenInArray(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft));
                             if (isKeyComplex(key)) {
-                                stackLocal
-                                    .add(new ParserState(InArrayElement, generator, getFieldNameFromKey(keyLeft), null));
+                                jsonUnflattenerState.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
                             }
                         } else {//the same array
                             final int arrayIndex = getIndexFromKey(keyLeft);
                             if (!jsonElement.getIndex().equals(arrayIndex)) {
-                                closeAllBeforeArray(jsonElement);
-                                ParserState state = stack.get(stack.size() - 1);
-                                state.incIndex();
+                                jsonUnflattenerState.closeAllBeforeArray(jsonElement);
+                                jsonUnflattenerState.incLastIndex();
                                 if (isKeyComplex(key)) {
-                                    stackLocal.add(
-                                        new ParserState(InArrayElement, generator, getFieldNameFromKey(keyLeft), null));
+                                    jsonUnflattenerState.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
                                 }
                             }
                         }
                     } else {
-                        closeAllToElement(jsonElement);
-                        stackLocal.add(new ParserState(InObject, generator, keyLeft, null));
+                        jsonUnflattenerState.closeAllToElement(jsonElement);
+                        jsonUnflattenerState.addAndOpenInObject(keyLeft);
                     }
                 }
             } else {
                 if (isKeyElementOfArray(keyLeft)) {
                     final String arrayName = getFieldNameFromKey(keyLeft);
-                    stackLocal.add(new ParserState(InArray, generator, arrayName, getIndexFromKey(keyLeft)));
+                    jsonUnflattenerState.addAndOpenInArray(arrayName, getIndexFromKey(keyLeft));
                     if (isKeyComplex(key)) {
-                        stackLocal.add(new ParserState(InArrayElement, generator, getFieldNameFromKey(keyLeft), null));
+                        jsonUnflattenerState.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
                     }
                 } else {
-                    stackLocal.add(new ParserState(InObject, generator, keyLeft, null));
+                    jsonUnflattenerState.addAndOpenInObject(keyLeft);
                 }
             }
         }
 
-        if (stackLocal.size() == 0) {
-            closeAllBeforeItem(jsonElement);
-        }
-        stack.addAll(stackLocal);
+        jsonUnflattenerState.closeAllBeforeItem(jsonElement);
+        jsonUnflattenerState.updateStack();
 
         if (key != null) {
-            generator.writeStringField(key, data.get(fullKey));
+            jsonUnflattenerState.writeStringField(key, data.get(fullKey));
         } else
-            generator.writeString(data.get(fullKey));
-
-    }
-
-    private void closeAllToElement(ParserState jsonElement) throws IOException {
-        if (jsonElement == null)
-            return;
-        for (ListIterator<ParserState> iteratorReverse = stack.listIterator(stack.size());
-             iteratorReverse.hasPrevious(); ) {
-            final ParserState element = iteratorReverse.previous();
-            element.close();
-            iteratorReverse.remove();
-
-            if (jsonElement == element) {
-                break;
-            }
-        }
-    }
-
-    private void closeAllBeforeArray(ParserState jsonElement) throws IOException {
-        if (jsonElement == null)
-            return;
-        for (ListIterator<ParserState> iteratorReverse = stack.listIterator(stack.size());
-             iteratorReverse.hasPrevious(); ) {
-            final ParserState jsonElementReverse = iteratorReverse.previous();
-            if (jsonElement == jsonElementReverse) {
-                break;
-            }
-            iteratorReverse.remove();
-            jsonElementReverse.close();
-        }
-    }
-
-    private void closeAllBeforeItem(ParserState jsonElement) throws IOException {
-        for (ListIterator<ParserState> iteratorReverse = stack.listIterator(stack.size());
-             iteratorReverse.hasPrevious(); ) {
-            final ParserState jsonElementReverse = iteratorReverse.previous();
-            if (jsonElementReverse.getParserStateEnum().equals(ParserStateEnum.InArrayElement)) {
-                if (stack.get(iteratorReverse.previousIndex()) == jsonElement) {
-                    break;
-                }
-            }
-            if (jsonElement == jsonElementReverse) {
-                break;
-            }
-            iteratorReverse.remove();
-            jsonElementReverse.close();
-        }
+            jsonUnflattenerState.writeString(data.get(fullKey));
     }
 
     private static boolean isKeyComplex(String key) {
