@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Map;
@@ -16,15 +15,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.github.v_ctor.json.unflattener.ParserStateEnum.InArray;
+import static com.github.v_ctor.json.unflattener.ParserStateEnum.InArrayElement;
+import static com.github.v_ctor.json.unflattener.ParserStateEnum.InObject;
+
 @SuppressWarnings("WeakerAccess")
 public class JsonUnflattener {
     private Map<String, String> data;
     private final OutputStream out;
     private final JsonGenerator generator;
-    //    private final ParserStateMachine parserStateMachine;
-    private final ArrayList<Map.Entry<String, Integer>> stack = new ArrayList<>();
+    private final ArrayList<ParserState> stack = new ArrayList<>();
 
-    //    private int level;
 
     @SuppressWarnings("WeakerAccess")
     private JsonUnflattener(OutputStream out) throws IOException {
@@ -62,36 +63,29 @@ public class JsonUnflattener {
     public OutputStream parseToJson() throws IOException {
         generator.writeStartObject();
         for (String key : new TreeSet<>(data.keySet())) {
-            //            level = 0;
             parseKey(key, key);
         }
 
-        ListIterator<Map.Entry<String, Integer>> iterator = stack.listIterator(stack.size());
+        ListIterator<ParserState> iterator = stack.listIterator(stack.size());
         while (iterator.hasPrevious()) {
-            Map.Entry<String, Integer> element = iterator.previous();
-            if (element.getValue() == null) {
-                ParserStates.InObject.close(generator);
-            } else {
-                ParserStates.InArray.close(generator);
-            }
+            iterator.previous().close();
         }
 
         generator.writeEndObject();
-
         generator.close();
 
         return out;
     }
 
-    private void parseKey(String key, String fullKey) throws IOException {
+    private void parseKey(String key, final String fullKey) throws IOException {
         //        final String keyLeft = getKeyLeft(key);
         //        final String arrayName = getFieldNameFromKey(keyLeft);
         //        final int arrayIndex = getIndexFromKey(keyLeft);
         String keyLeft = getKeyLeft(key);
-        Map.Entry<String, Integer> jsonElement = null;
-        final ArrayList<Map.Entry<String, Integer>> stackLocal = new ArrayList<>();
+        ParserState jsonElement = null;
+        final ArrayList<ParserState> stackLocal = new ArrayList<>();
 
-        for (/*Iterator<Map.Entry<String, Integer>> iterator = stack.iterator()*/
+        for (/*Iterator<ParserState> iterator = stack.iterator()*/
             int i = 0;
             isKeyComplex(key) || isKeyElementOfArray(keyLeft);
             key = getKeyRight(key),
@@ -102,51 +96,62 @@ public class JsonUnflattener {
             if (i <= stack.size() - 1) {
                 //                jsonElement = iterator.next();
                 jsonElement = stack.get(i);
-                if (!jsonElement.getKey().equals(keyLeft)) {
+                if (!jsonElement.getName().equals(keyLeft)) {
                     //закрываем сущности
                     if (isKeyElementOfArray(keyLeft)) {
                         final String arrayName = getFieldNameFromKey(keyLeft);
-                        if (!jsonElement.getKey().equals(arrayName)) {
+                        if (!jsonElement.getName().equals(arrayName)) {
                             closeAllToElement(jsonElement);
-                            stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
-                            ParserStates.InArray.open(generator, arrayName);
+                            //                            ParserState state = new ParserState(InArray, generator, getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft));
+                            stackLocal.add(new ParserState(InArray, generator, getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
+                            //                            ParserStateEnum.InArray.open(generator, arrayName);
                             if (isKeyComplex(key)) {
-                                stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
-                                ParserStates.InObject.open(generator, keyLeft);
+                                //                                stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
+                                //                                ParserStateEnum.InObject.open(generator, keyLeft);
+                                stackLocal
+                                    .add(new ParserState(InObject, generator, getFieldNameFromKey(keyLeft), null));
                             }
-                        } else {
+                        } else {//the same array
                             final int arrayIndex = getIndexFromKey(keyLeft);
-                            if (!jsonElement.getValue().equals(arrayIndex)) {
-                                closeAllBeforeElement(jsonElement);
-                                stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
+                            if (!jsonElement.getIndex().equals(arrayIndex)) {
+/*                                closeAllBeforeElement(jsonElement);
+                                stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft))); //!!!*/
+                                closeAllBeforeArray(jsonElement);
+                                ParserState state = stack.get(stack.size() - 1);
+                                state.setIndex(state.getIndex() + 1);
+                                //                                stackLocal.add(state);
+                                //                                stackLocal.add(new ParserState(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft)));
                                 if (isKeyComplex(key)) {
-                                    stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
-                                    ParserStates.InArrayElement.open(generator, keyLeft);
+                                    //                                    stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
+                                    //                                    ParserStateEnum.InArrayElement.open(generator, keyLeft);
+                                    stackLocal.add(
+                                        new ParserState(InArrayElement, generator, getFieldNameFromKey(keyLeft), null));
                                 }
-
                             }
                         }
                     } else {
                         closeAllToElement(jsonElement);
-                        stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, null));
-                        ParserStates.InObject.open(generator, keyLeft);
+                        //                        stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, null));
+                        //                        InObject.open(generator, keyLeft);
+                        stackLocal.add(new ParserState(InObject, generator, keyLeft, null));
                     }
                 }
             } else {
                 if (isKeyElementOfArray(keyLeft)) {
                     final String arrayName = getFieldNameFromKey(keyLeft);
-                    stackLocal.add(new AbstractMap.SimpleEntry<>(arrayName, getIndexFromKey(keyLeft)));
-                    ParserStates.InArray.open(generator, arrayName);
-                    /*if (!isKeyComplex(key)) {
+                    //                    stackLocal.add(new AbstractMap.SimpleEntry<>(arrayName, getIndexFromKey(keyLeft)));
+                    //                    InArray.open(generator, arrayName);
+                    stackLocal.add(new ParserState(InArray, generator, arrayName, getIndexFromKey(keyLeft)));
 
-                    }*/
                     if (isKeyComplex(key)) {
-                        stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
-                        ParserStates.InArrayElement.open(generator, keyLeft);
+                        //                        stackLocal.add(new AbstractMap.SimpleEntry<>(getFieldNameFromKey(keyLeft), null));
+                        //                        InArrayElement.open(generator, keyLeft);
+                        stackLocal.add(new ParserState(InArrayElement, generator, getFieldNameFromKey(keyLeft), null));
                     }
                 } else {
-                    stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, null));
-                    ParserStates.InObject.open(generator, keyLeft);
+                    //                    stackLocal.add(new AbstractMap.SimpleEntry<>(keyLeft, null));
+                    //                    InObject.open(generator, keyLeft);
+                    stackLocal.add(new ParserState(InObject, generator, keyLeft, null));
                 }
             }
 
@@ -154,15 +159,14 @@ public class JsonUnflattener {
             //            key = keyRight;
         }
 
-        if (stackLocal.size() == 0) {
-            closeAllBeforeElement(jsonElement);
+        if (stackLocal.size() == 0 /*&& key==null*/) {
+            closeAllBeforeArray(jsonElement);
         }
         stack.addAll(stackLocal);
 
         if (key != null) {
-/*            if (stack.get(stack.size() - 1).getKey() != null) {
-                stackLocal.add(new AbstractMap.SimpleEntry<>(stack.get(stack.size() - 1).getValue().toString(), null));
-                ParserStates.InArrayElement.open(generator, null);
+/*            if (stack.get(stack.size() - 1).getParserStateEnum().equals(InArray)) {
+                stack.add(new ParserState(InArrayElement, generator, getFieldNameFromKey(keyLeft), null));
             }*/
             generator.writeStringField(key, data.get(fullKey));
         } else
@@ -170,12 +174,12 @@ public class JsonUnflattener {
 
     }
 
-    private void closeAllToElement(Map.Entry<String, Integer> jsonElement) throws IOException {
+    private void closeAllToElement(ParserState jsonElement) throws IOException {
         if (jsonElement == null)
             return;
-        for (ListIterator<Map.Entry<String, Integer>> iteratorReverse = stack.listIterator(stack.size());
+        for (ListIterator<ParserState> iteratorReverse = stack.listIterator(stack.size());
              iteratorReverse.hasPrevious(); ) {
-/*            final Map.Entry<String, Integer> jsonElementReverse = iteratorReverse.previous();
+/*            final ParserState jsonElementReverse = iteratorReverse.previous();
             //            if (jsonElement != jsonElementReverse  *//*|| !iteratorReverse.hasPrevious()*//*) {
             //                            jsonElementReverse.
             ParserStates.InObject.close(generator);
@@ -183,12 +187,13 @@ public class JsonUnflattener {
             iteratorReverse.remove();*/
 
 
-            final Map.Entry<String, Integer> element = iteratorReverse.previous();
-            if (element.getValue() == null) {
-                ParserStates.InObject.close(generator);
+            final ParserState element = iteratorReverse.previous();
+/*            if (element.getIndex() == null) {
+                InObject.close(generator);
             } else {
-                ParserStates.InArray.close(generator);
-            }
+                InArray.close(generator);
+            }*/
+            element.close();
             iteratorReverse.remove();
 
 
@@ -198,19 +203,40 @@ public class JsonUnflattener {
         }
     }
 
-    private void closeAllBeforeElement(Map.Entry<String, Integer> jsonElement) throws IOException {
+    private void closeAllBeforeElement(ParserState jsonElement) throws IOException {
         if (jsonElement == null)
             return;
-        for (ListIterator<Map.Entry<String, Integer>> iteratorReverse = stack.listIterator(stack.size());
+        for (ListIterator<ParserState> iteratorReverse = stack.listIterator(stack.size());
              iteratorReverse.hasPrevious(); ) {
-            final Map.Entry<String, Integer> jsonElementReverse = iteratorReverse.previous();
+            final ParserState jsonElementReverse = iteratorReverse.previous();
             iteratorReverse.remove();
             if (jsonElement == jsonElementReverse) {
                 break;
             }
             if (jsonElement != jsonElementReverse  /*|| !iteratorReverse.hasPrevious()*/) {
                 //                            jsonElementReverse.
-                ParserStates.InObject.close(generator);
+                //                InObject.close(generator);
+                jsonElementReverse.close();
+            }
+        }
+    }
+
+    private void closeAllBeforeArray(ParserState jsonElement) throws IOException {
+        if (jsonElement == null)
+            return;
+        for (ListIterator<ParserState> iteratorReverse = stack.listIterator(stack.size());
+             iteratorReverse.hasPrevious(); ) {
+            final ParserState jsonElementReverse = iteratorReverse.previous();
+/*            if (jsonElementReverse.getParserStateEnum().equals(ParserStateEnum.InArray))
+                break;*/
+            if (jsonElement == jsonElementReverse) {
+                break;
+            }
+            iteratorReverse.remove();
+            if (jsonElement != jsonElementReverse  /*|| !iteratorReverse.hasPrevious()*/) {
+                //                            jsonElementReverse.
+                //                InObject.close(generator);
+                jsonElementReverse.close();
             }
         }
     }

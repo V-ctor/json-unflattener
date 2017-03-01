@@ -11,7 +11,7 @@ import java.util.Map;
 
 class ParserStateMachine {
     private final ArrayList<Map.Entry<String, Integer>> jsonElementStack = new ArrayList<>();
-    private final Deque<Map.Entry<Integer, ParserStates>> parserStateDeque = new ArrayDeque<>();
+    private final Deque<Map.Entry<Integer, ParserStateEnum>> parserStateDeque = new ArrayDeque<>();
     private final JsonGenerator generator;
 
     ParserStateMachine(JsonGenerator generator) {
@@ -20,7 +20,7 @@ class ParserStateMachine {
 
     void closeAll() throws IOException {
         while (parserStateDeque.size() > 0) {
-            final ParserStates last = parserStateDeque.getLast().getValue();
+            final ParserStateEnum last = parserStateDeque.getLast().getValue();
             last.close(generator);
             parserStateDeque.removeLast();
         }
@@ -39,7 +39,7 @@ class ParserStateMachine {
     void fromAnywhereForArrayObject(int level) throws IOException {
         downgradeToLevel(level);
         closeAllToLevel(level);
-        if (parserStateDeque.getLast().getValue().equals(ParserStates.InArrayElement))
+        if (parserStateDeque.getLast().getValue().equals(ParserStateEnum.InArrayElement))
             closeEntity();
     }
 
@@ -68,27 +68,27 @@ class ParserStateMachine {
     }
 
     private void openArrayEntity(int level, String name) throws IOException {
-        final ParserStates parserState = ParserStates.InArray;
-        parserState.open(generator, name);
-        parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserState));
+        final ParserStateEnum parserStateEnum = ParserStateEnum.InArray;
+        parserStateEnum.open(generator, name);
+        parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserStateEnum));
     }
 
     void openArrayElementEntity(int level) throws IOException {
-        final ParserStates parserState = ParserStates.InArrayElement;
-        parserState.open(generator, null);
-        parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserState));
+        final ParserStateEnum parserStateEnum = ParserStateEnum.InArrayElement;
+        parserStateEnum.open(generator, null);
+        parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserStateEnum));
     }
 
-    private ParserStates closeEntity() throws IOException {
-        final ParserStates parserState = parserStateDeque.pollLast().getValue();
-        parserState.close(generator);
-        return parserState;
+    private ParserStateEnum closeEntity() throws IOException {
+        final ParserStateEnum parserStateEnum = parserStateDeque.pollLast().getValue();
+        parserStateEnum.close(generator);
+        return parserStateEnum;
     }
 
     private void openObjectEntity(int level, String name) throws IOException {
-        final ParserStates parserState = ParserStates.InObject;
-        parserState.open(generator, name);
-        parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserState));
+        final ParserStateEnum parserStateEnum = ParserStateEnum.InObject;
+        parserStateEnum.open(generator, name);
+        parserStateDeque.addLast(new AbstractMap.SimpleEntry<>(level, parserStateEnum));
     }
 
     boolean isBranchDeeper(int level) {
