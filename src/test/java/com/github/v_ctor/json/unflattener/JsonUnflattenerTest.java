@@ -397,6 +397,47 @@ public class JsonUnflattenerTest {
     }
 
     @Test//(dependsOnMethods = "MapToJsonTestTwoArrays")
+    void MapToJsonTestTwoArrays11() throws IOException {
+        final Map<String, String> data = new HashMap<>();
+
+        data.put("a[0].b" , TEST_VALUE_1);
+        data.put("a[0].c.d" , TEST_VALUE_2);
+
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"" + TEST_VALUE_1 + "\",\"c\":{\"d\":\"" + TEST_VALUE_2 + "\"}}]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestTwoArrays")
+    void MapToJsonTestTwoArrays12() throws IOException {
+        final Map<String, String> data = new HashMap<>();
+
+        data.put("a[0].b", TEST_VALUE_1);
+        data.put("a[0].c.d", TEST_VALUE_2);
+        data.put("a[0].e.f[0]", TEST_VALUE_3);
+
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"value1\",\"c\":{\"d\":\"value2\"},\"e\":{\"f\":[\"value3\"]}}]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestTwoArrays")
+    void MapToJsonTestTwoArrays13() throws IOException {
+        final Map<String, String> data = new HashMap<>();
+
+        data.put("a[0].b", TEST_VALUE_1);
+        data.put("a[0].c.d", TEST_VALUE_2);
+        data.put("a[0].e.f[0].g", TEST_VALUE_3);
+
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final JsonUnflattener jsonUnflattener = new JsonUnflattener(() -> data, outputStream);
+        jsonUnflattener.parseToJson();
+        assertEquals(outputStream.toString(), "{\"a\":[{\"b\":\"value1\",\"c\":{\"d\":\"value2\"},\"e\":{\"f\":[{\"g\":\"value3\"}]}}]}");
+    }
+
+    @Test//(dependsOnMethods = "MapToJsonTestTwoArrays")
     void MapToJsonTestFull() throws IOException {
         final Map<String, String> data = new HashMap<>();
 

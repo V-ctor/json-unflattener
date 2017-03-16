@@ -77,6 +77,9 @@ class JsonUnflattenerState {
         for (ListIterator<ParserState> iteratorReverse = stack.listIterator(stack.size());
              iteratorReverse.hasPrevious(); ) {
             final ParserState element = iteratorReverse.previous();
+            if (element.getParserStateEnum().equals(InArrayElement)
+                && (element == jsonElement))
+                break;
             element.close();
             iteratorReverse.remove();
 

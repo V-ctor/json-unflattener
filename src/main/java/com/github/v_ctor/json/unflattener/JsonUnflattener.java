@@ -76,7 +76,7 @@ public class JsonUnflattener {
             ) {
 
             if (i <= jsonUnflattenerState.size() - 1) {
-                while (jsonUnflattenerState.get(i).getParserStateEnum().equals(InArrayElement)) {
+                while (i < (jsonUnflattenerState.size() - 1) && jsonUnflattenerState.get(i).getParserStateEnum().equals(InArrayElement)) {
                     i++;
                 }
                 jsonElement = jsonUnflattenerState.get(i);
