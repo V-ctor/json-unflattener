@@ -12,19 +12,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.github.v_ctor.json.unflattener.ParserStateEnum.InArrayElement;
-
 @SuppressWarnings("WeakerAccess")
 public class JsonUnflattener {
     private Map<String, String> data;
     private final OutputStream out;
-    private JsonUnflattenerState jsonUnflattenerState;
+    private JsonUnflattenerState jsonUnflattenerStateStack;
 
     @SuppressWarnings("WeakerAccess")
     private JsonUnflattener(OutputStream out) throws IOException {
         this.out = out;
         final JsonFactory factory = new JsonFactory();
-        jsonUnflattenerState = new JsonUnflattenerState(factory.createGenerator(out, JsonEncoding.UTF8));
+        jsonUnflattenerStateStack = new JsonUnflattenerState(factory.createGenerator(out, JsonEncoding.UTF8));
     }
 
     public JsonUnflattener(FlatterenMapStringString data, OutputStream out) throws IOException {
@@ -53,12 +51,12 @@ public class JsonUnflattener {
 
     @SuppressWarnings("WeakerAccess")
     public OutputStream parseToJson() throws IOException {
-        jsonUnflattenerState.openJson();
+        jsonUnflattenerStateStack.openJson();
         for (String key : new TreeSet<>(data.keySet())) {
             parseKey(key);
         }
 
-        jsonUnflattenerState.closeJson();
+        jsonUnflattenerStateStack.closeJson();
 
         return out;
     }
@@ -68,63 +66,60 @@ public class JsonUnflattener {
         String keyLeft = getKeyLeft(key);
         ParserState jsonElement = null;
 
-        for (int i = 0;
+        for (jsonUnflattenerStateStack.resetIterator();
              isKeyComplex(key) || isKeyElementOfArray(keyLeft);
              key = getKeyRight(key),
-                 keyLeft = getKeyLeft(key),
-                 i++
+             keyLeft = getKeyLeft(key),
+             jsonUnflattenerStateStack.incPosition()
             ) {
 
-            if (i <= jsonUnflattenerState.size() - 1) {
-                while (i < (jsonUnflattenerState.size() - 1) && jsonUnflattenerState.get(i).getParserStateEnum().equals(InArrayElement)) {
-                    i++;
-                }
-                jsonElement = jsonUnflattenerState.get(i);
+            if (jsonUnflattenerStateStack.hasNext()) {
+                jsonElement = jsonUnflattenerStateStack.getNext();
                 if (!jsonElement.getName().equals(keyLeft)) {
                     //closing entities
                     if (isKeyElementOfArray(keyLeft)) {
                         final String arrayName = getFieldNameFromKey(keyLeft);
                         if (!jsonElement.getName().equals(arrayName)) {
-                            jsonUnflattenerState.closeAllToElement(jsonElement);
-                            jsonUnflattenerState.addAndOpenInArray(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft));
+                            jsonUnflattenerStateStack.closeAllToElement(jsonElement);
+                            jsonUnflattenerStateStack.addAndOpenInArray(getFieldNameFromKey(keyLeft), getIndexFromKey(keyLeft));
                             if (isKeyComplex(key)) {
-                                jsonUnflattenerState.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
+                                jsonUnflattenerStateStack.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
                             }
                         } else {//the same array
                             final int arrayIndex = getIndexFromKey(keyLeft);
                             if (!jsonElement.getIndex().equals(arrayIndex)) {
-                                jsonUnflattenerState.closeAllBeforeArray(jsonElement);
-                                jsonUnflattenerState.incLastIndex();
+                                jsonUnflattenerStateStack.closeAllBeforeArray(jsonElement);
+                                jsonUnflattenerStateStack.incLastIndex();
                                 if (isKeyComplex(key)) {
-                                    jsonUnflattenerState.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
+                                    jsonUnflattenerStateStack.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
                                 }
                             }
                         }
                     } else {
-                        jsonUnflattenerState.closeAllToElement(jsonElement);
-                        jsonUnflattenerState.addAndOpenInObject(keyLeft);
+                        jsonUnflattenerStateStack.closeAllToElement(jsonElement);
+                        jsonUnflattenerStateStack.addAndOpenInObject(keyLeft);
                     }
                 }
             } else {
                 if (isKeyElementOfArray(keyLeft)) {
                     final String arrayName = getFieldNameFromKey(keyLeft);
-                    jsonUnflattenerState.addAndOpenInArray(arrayName, getIndexFromKey(keyLeft));
+                    jsonUnflattenerStateStack.addAndOpenInArray(arrayName, getIndexFromKey(keyLeft));
                     if (isKeyComplex(key)) {
-                        jsonUnflattenerState.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
+                        jsonUnflattenerStateStack.addAndOpenInArrayElement(getFieldNameFromKey(keyLeft));
                     }
                 } else {
-                    jsonUnflattenerState.addAndOpenInObject(keyLeft);
+                    jsonUnflattenerStateStack.addAndOpenInObject(keyLeft);
                 }
             }
         }
 
-        jsonUnflattenerState.closeAllBeforeItem(jsonElement);
-        jsonUnflattenerState.updateStack();
+        jsonUnflattenerStateStack.closeAllBeforeItem(jsonElement);
+        jsonUnflattenerStateStack.updateStack();
 
         if (key != null) {
-            jsonUnflattenerState.writeStringField(key, data.get(fullKey));
+            jsonUnflattenerStateStack.writeStringField(key, data.get(fullKey));
         } else
-            jsonUnflattenerState.writeString(data.get(fullKey));
+            jsonUnflattenerStateStack.writeString(data.get(fullKey));
     }
 
     private static boolean isKeyComplex(String key) {

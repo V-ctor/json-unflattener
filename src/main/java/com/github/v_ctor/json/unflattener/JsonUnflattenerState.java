@@ -13,7 +13,8 @@ import static com.github.v_ctor.json.unflattener.ParserStateEnum.InObject;
 class JsonUnflattenerState {
     private final JsonGenerator generator;
     private final ArrayList<ParserState> stack = new ArrayList<>();
-    private final ArrayList<ParserState> stackLocal = new ArrayList<>();
+    private final ArrayList<ParserState> stackNew = new ArrayList<>();
+    private int i = 0;
 
     JsonUnflattenerState(JsonGenerator generator) {
         this.generator = generator;
@@ -33,7 +34,7 @@ class JsonUnflattenerState {
         generator.close();
     }
 
-    ParserState get(int i) {
+    ParserState getCurrent(int i) {
         return stack.get(i);
     }
 
@@ -42,15 +43,15 @@ class JsonUnflattenerState {
     }
 
     void addAndOpenInArray(final String name, final Integer index) throws IOException {
-        stackLocal.add(new ParserState(InArray, generator, name, index));
+        stackNew.add(new ParserState(InArray, generator, name, index));
     }
 
     void addAndOpenInArrayElement(final String name) throws IOException {
-        stackLocal.add(new ParserState(InArrayElement, generator, name, null));
+        stackNew.add(new ParserState(InArrayElement, generator, name, null));
     }
 
     void addAndOpenInObject(final String name) throws IOException {
-        stackLocal.add(new ParserState(InObject, generator, name, null));
+        stackNew.add(new ParserState(InObject, generator, name, null));
     }
 
     void incLastIndex() {
@@ -67,8 +68,42 @@ class JsonUnflattenerState {
     }
 
     void updateStack() {
-        stack.addAll(stackLocal);
-        stackLocal.clear();
+        stack.addAll(stackNew);
+        stackNew.clear();
+    }
+
+    void resetIterator() {
+        i = 0;
+    }
+
+    boolean hasNext() {
+        return i <= (stack.size() - 1);
+    }
+
+    private boolean notLast() {
+        return i < (stack.size() - 1);
+    }
+
+    void incPosition() {
+        i++;
+    }
+
+    private ParserState getCurrent() {
+        return stack.get(i);
+    }
+
+    /*
+    Get next element skipping InArrayElement
+     */
+    ParserState getNext() {
+        ParserState jsonElement;
+        while (notLast() &&
+            getCurrent().getParserStateEnum().equals(ParserStateEnum.InArrayElement)) {
+
+            incPosition();
+        }
+        jsonElement = getCurrent();
+        return jsonElement;
     }
 
     void closeAllToElement(ParserState jsonElement) throws IOException {
@@ -104,7 +139,7 @@ class JsonUnflattenerState {
     }
 
     void closeAllBeforeItem(ParserState jsonElement) throws IOException {
-        if (stackLocal.size() != 0) {
+        if (stackNew.size() != 0) {
             return;
         }
 
@@ -123,5 +158,4 @@ class JsonUnflattenerState {
             jsonElementReverse.close();
         }
     }
-
 }
